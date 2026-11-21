@@ -1,4 +1,13 @@
+# bin 파일
 /bin/
+
 .classpath
 .project
 .settings/
+
+# mac 자동 완성 파일
+.DS_Store
+
+
+
+

@@ -1,13 +1,10 @@
 // [작업요약] note 판정에 대한 디자인 처리 
 package dynamic_beat_16;
 
-import java.awt.Color;
 import java.awt.Cursor;
-import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
@@ -17,13 +14,12 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.Timer;
 
 public class DynamicBeat extends JFrame {
 
-	private Image screenImage;
-	private Graphics screenGraphic;
-
-	private ImageIcon exitButtonEnteredImage = new ImageIcon(("images/exitButtonEntered.png"));
+	private ImageIcon exitButtonEnteredImage = new ImageIcon(Main.class.getResource("images/exitButtonEntered.png"));
 	private ImageIcon exitButtonBasicImage = new ImageIcon(Main.class.getResource("images/exitButtonBasic.png"));
 	private ImageIcon startButtonEnteredImage = new ImageIcon(
 			Main.class.getResource("images/startButtonEntered.png"));
@@ -74,6 +70,14 @@ public class DynamicBeat extends JFrame {
 	// 즉, 동시에 여러곡을 재생시키면서 게임할 순 없음. 
 	// 즉, game이라는 변수는 게임 프로젝트 내에서 통용되는 하나의 변수이므로 public static 붙여주었음. 
 	
+	private JPanel screenPanel = new JPanel(null) {
+		@Override
+		protected void paintComponent(Graphics g) {
+			super.paintComponent(g);
+			screenDraw((Graphics2D) g);
+		}
+	};
+	
 	public DynamicBeat() {
 		// trackList에 add
 		trackList.add(new Track("Energy Title Image.png", 
@@ -92,9 +96,7 @@ public class DynamicBeat extends JFrame {
 		setResizable(false); // 창 크기 변경 불가능하게
 		setLocationRelativeTo(null); // 창이 정 중앙에 뜨게 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // 창 종료 시 게임 종료되도록
-		setVisible(true);
-		setBackground(new Color(0, 0, 0, 0));
-		setLayout(null);
+		setContentPane(screenPanel); // 버튼 add 하기 전에 패널 지정 (투명 배경 설정은 삭제, setVisible은 맨 아래로)
 		
 		addKeyListener(new KeyListener());
 		
@@ -374,14 +376,8 @@ public class DynamicBeat extends JFrame {
 		});
 		add(menuBar);
 
-
-	}
-
-	public void paint(Graphics g) {
-		screenImage = createImage(Main.SCREEN_WIDTH, Main.SCREEN_HEIGHT);
-		screenGraphic = screenImage.getGraphics();
-		screenDraw((Graphics2D) screenGraphic);  // Antialiasing 처리 - 글자 깨짐 방지. Graphics2D import 해야함.
-		g.drawImage(screenImage, 0, 0, null);
+		new Timer(10, e -> screenPanel.repaint()).start(); // 0.01초마다 화면 다시 그리기
+		setVisible(true); // 모든 설정이 끝난 뒤 마지막에 창 띄우기
 	}
 
 	public void screenDraw(Graphics2D g) {
@@ -390,17 +386,10 @@ public class DynamicBeat extends JFrame {
 			g.drawImage(selectedImage, 340, 100, null);
 			g.drawImage(titleImage, 340, 110, null);
 		}
-		if(isGameScreen) {
+		if(isGameScreen && game != null) {
 			game.screenDraw(g);
 		}
-		paintComponents(g);
-		try {
-			Thread.sleep(5);
-		}catch (Exception e) {
-			e.printStackTrace();
-		}
-		// 일정한 시간차를 두고 실행하게끔. ==> 애니메이션이 더 매끄럽게 나온다. 
-		this.repaint();
+		// 버튼은 패널이 알아서 그리고, 반복해서 다시 그리는 건 Timer가 담당
 	}
 	
 	// <곡 선택 함수>
