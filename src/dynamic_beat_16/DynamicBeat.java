@@ -67,9 +67,9 @@ public class DynamicBeat extends JFrame {
 	private int mouseX, mouseY;
 
 	private GameState state = GameState.INTRO;
-	private static final long RESULT_FADE_NANOS = 1_500_000_000L;
+	private static final int RESULT_FADE_MILLIS = 1500;
 	private Game completedGame;
-	private long fadeStartedAt;
+	private int fadeElapsedMillis;
 	private int fadeOpacity;
 
 	ArrayList<Track> trackList = new ArrayList<Track>();
@@ -453,7 +453,7 @@ public class DynamicBeat extends JFrame {
 				completedGame = game;
 				game = null;
 				fadeOpacity = 0;
-				fadeStartedAt = System.nanoTime();
+				fadeElapsedMillis = 0;
 				state = GameState.FADING_OUT;
 			}
 		} else if (state == GameState.FADING_OUT) {
@@ -461,8 +461,8 @@ public class DynamicBeat extends JFrame {
 				completedGame.close();
 				state = GameState.RESULT;
 			} else {
-				long elapsed = System.nanoTime() - fadeStartedAt;
-				fadeOpacity = (int) Math.min(255, elapsed * 255 / RESULT_FADE_NANOS);
+				fadeElapsedMillis += Main.SLEEP_TIME;
+				fadeOpacity = Math.min(255, fadeElapsedMillis * 255 / RESULT_FADE_MILLIS);
 			}
 		}
 	}
