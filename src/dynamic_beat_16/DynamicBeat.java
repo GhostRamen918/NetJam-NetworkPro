@@ -1,6 +1,7 @@
 // [작업요약] note 판정에 대한 디자인 처리 
 package dynamic_beat_16;
 
+import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -56,6 +57,10 @@ public class DynamicBeat extends JFrame {
 
 	private boolean isMainScreen = false;
 	private boolean isGameScreen = false;
+	private static final long RESULT_FADE_NANOS = 1_500_000_000L;
+	private Game completedGame;
+	private long fadeStartedAt;
+	private int fadeOpacity;
 
 	ArrayList<Track> trackList = new ArrayList<Track>();
 	
@@ -75,6 +80,17 @@ public class DynamicBeat extends JFrame {
 		protected void paintComponent(Graphics g) {
 			super.paintComponent(g);
 			screenDraw((Graphics2D) g);
+		}
+
+		@Override
+		public void paint(Graphics g) {
+			super.paint(g);
+			if (isGameScreen && completedGame != null) {
+				Graphics overlay = g.create();
+				overlay.setColor(new Color(0, 0, 0, fadeOpacity));
+				overlay.fillRect(0, 0, getWidth(), getHeight());
+				overlay.dispose();
+			}
 		}
 	};
 	
@@ -376,22 +392,49 @@ public class DynamicBeat extends JFrame {
 		});
 		add(menuBar);
 
-		new Timer(10, e -> screenPanel.repaint()).start(); // 0.01초마다 화면 다시 그리기
+		new Timer(10, e -> {
+			updateGameEnd();
+			screenPanel.repaint();
+		}).start();
 		setVisible(true); // 모든 설정이 끝난 뒤 마지막에 창 띄우기
 	}
 
 	public void screenDraw(Graphics2D g) {
+		if (completedGame != null && !isGameScreen) {
+			completedGame.drawResult(g);
+			return;
+		}
 		g.drawImage(background, 0, 0, null);
 		if(isMainScreen) {
 			g.drawImage(selectedImage, 340, 100, null);
 			g.drawImage(titleImage, 340, 110, null);
 		}
-		if(isGameScreen && game != null) {
-			game.screenDraw(g);
+		if (isGameScreen) {
+			Game displayedGame = completedGame == null ? game : completedGame;
+			displayedGame.screenDraw(g);
 		}
 		// 버튼은 패널이 알아서 그리고, 반복해서 다시 그리는 건 Timer가 담당
 	}
 	
+	private void updateGameEnd() {
+		if (!isGameScreen) {
+			return;
+		}
+		if (completedGame == null) {
+			if (game.hasFinishedNotes()) {
+				completedGame = game;
+				game = null;
+				fadeStartedAt = System.nanoTime();
+			}
+		} else if (fadeOpacity == 255) {
+			completedGame.close();
+			isGameScreen = false;
+		} else {
+			long elapsed = System.nanoTime() - fadeStartedAt;
+			fadeOpacity = (int) Math.min(255, elapsed * 255 / RESULT_FADE_NANOS);
+		}
+	}
+
 	// <곡 선택 함수>
 	public void selectTrack(int nowSelected) {
 		if(selectedMusic != null) // 이미 어떤 곡이 실행되고 있었다면 실행되고 있던 곡을 종료시킴
@@ -449,6 +492,14 @@ public class DynamicBeat extends JFrame {
 	
 	// <메인으로 돌아가는 함수>
 	public void backMain(){
+		if (game != null) {
+			game.close();
+			game = null;
+		} else if (isGameScreen && completedGame != null) {
+			completedGame.close();
+		}
+		completedGame = null;
+		fadeOpacity = 0;
 		isGameScreen = false;
 		isMainScreen = true;
 		// 버튼 처리 - 메인화면에 나오는 버튼들 노출시킴 
@@ -461,7 +512,6 @@ public class DynamicBeat extends JFrame {
 		// 버튼 처리 - 게임화면에 나오는 버튼 숨김
 		backButton.setVisible(false);
 		selectTrack(nowSelected);
-		game.close();
 	}
 	
 	// <시작버튼 이벤트 처리 함수> 

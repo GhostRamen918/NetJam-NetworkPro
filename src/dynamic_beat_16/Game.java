@@ -53,6 +53,30 @@ public class Game extends Thread {
 	private int maxCombo=0;
 	
 	ArrayList<Note> noteList = new ArrayList<Note>();
+	private volatile boolean allNotesSpawned;
+
+	public boolean hasFinishedNotes() {
+		return allNotesSpawned && noteList.isEmpty();
+	}
+
+	public void drawResult(Graphics2D g) {
+		g.setColor(Color.BLACK);
+		g.fillRect(0, 0, Main.SCREEN_WIDTH, Main.SCREEN_HEIGHT);
+		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		g.setColor(Color.WHITE);
+		g.setFont(new Font("Dialog", Font.BOLD, 52));
+		drawCentered(g, "결과", 235);
+		g.setFont(new Font("Dialog", Font.PLAIN, 26));
+		drawCentered(g, titleName + " / " + difficulty, 287);
+		g.setFont(new Font("Dialog", Font.BOLD, 36));
+		drawCentered(g, "최종 점수  " + totalScore, 395);
+		drawCentered(g, "최고 콤보  " + maxCombo, 460);
+	}
+
+	private void drawCentered(Graphics2D g, String text, int y) {
+		int x = (Main.SCREEN_WIDTH - g.getFontMetrics().stringWidth(text)) / 2;
+		g.drawString(text, x, y);
+	}
 	
 	// <생성자> - 초기화 
 	public Game(String titleName, String difficulty, String musicTitle) {
@@ -472,11 +496,12 @@ public class Game extends Thread {
 			if(!dropped) {
 				try {
 					Thread.sleep(5); //5ms 쉬도록. 
-				}catch (Exception e) {
-					e.printStackTrace();
+				}catch (InterruptedException e) {
+					return;
 				}
 			}
 		}
+		allNotesSpawned = i == beats.length;
 		// note가 떨어지지 않은 경우에는 무한정 반복하는 것이 아니라, 텀을 두면서 note를 떨어뜨림
 		// ==> 더 효율적. 자원의 낭비를 줄일 수 있음. 애니메이션이 더 매끄럽게 나온다. 
 	}

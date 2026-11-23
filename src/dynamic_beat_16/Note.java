@@ -33,7 +33,7 @@ public class Note extends Thread { // 각각의 note 또한 하나의 부분적�
 	 *    ==> y 초기좌표 = 580 - (NOTE_SPEED*1000/SLEEP_TIME) * REACH_TIME
 	*/	
 	private String noteType;
-	private boolean proceeded = true; //현재 note의 진행여부 체크 
+	private volatile boolean proceeded = true; //현재 note의 진행여부 체크
 	
 	// 노트 타입을 받아온다. 
 	public String getNoteType() {
