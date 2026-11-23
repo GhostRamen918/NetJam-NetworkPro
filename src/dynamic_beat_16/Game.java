@@ -51,17 +51,23 @@ public class Game extends Thread {
 	}
 
 	public void drawResult(Graphics2D g) {
+		Grade grade = new Grade(totalScore, maxCombo, beats.length);
 		g.setColor(Color.BLACK);
 		g.fillRect(0, 0, Main.SCREEN_WIDTH, Main.SCREEN_HEIGHT);
 		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 		g.setColor(Color.WHITE);
 		g.setFont(new Font("Dialog", Font.BOLD, 52));
-		drawCentered(g, "결과", 235);
+		drawCentered(g, "결과", 180);
 		g.setFont(new Font("Dialog", Font.PLAIN, 26));
-		drawCentered(g, titleName + " / " + difficulty, 287);
+		drawCentered(g, titleName + " / " + difficulty, 228);
+		drawCentered(g, "랭크", 290);
+		g.setColor(Color.YELLOW);
+		g.setFont(new Font("Dialog", Font.BOLD, 96));
+		drawCentered(g, grade.rank, 388);
+		g.setColor(Color.WHITE);
 		g.setFont(new Font("Dialog", Font.BOLD, 36));
-		drawCentered(g, "최종 점수  " + totalScore, 395);
-		drawCentered(g, "최고 콤보  " + maxCombo, 460);
+		drawCentered(g, "최종 점수  " + grade.total, 467);
+		drawCentered(g, "최고 콤보  " + grade.maxCombo, 532);
 	}
 
 	private void drawCentered(Graphics2D g, String text, int y) {

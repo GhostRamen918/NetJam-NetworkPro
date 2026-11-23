@@ -16,7 +16,7 @@ import dynamic_beat_16.NoteCharts.Instrument;
 
 final class InstrumentSelectionPanel extends JPanel {
 	private static final Instrument[] INSTRUMENTS = { Instrument.DEFAULT, Instrument.BASS };
-	private final JLabel instrumentLabel = new JLabel("악기: 기본 7키", JLabel.CENTER);
+	private final JLabel instrumentLabel = new JLabel("드럼 7키", JLabel.CENTER);
 	private int selectedIndex;
 
 	InstrumentSelectionPanel(Consumer<Instrument> onSelect) {

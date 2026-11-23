@@ -29,7 +29,7 @@ public final class Grade {
 		if (noteCount == 0) {
 			return "D";
 		}
-		if (total >= noteCount * 36) {
+		if (total >= noteCount * PERFECT_POINTS) {
 			return "S";
 		}
 		if (total >= noteCount * GREAT_POINTS) {
