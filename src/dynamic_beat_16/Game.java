@@ -6,7 +6,7 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.ArrayList;
 
 import javax.swing.ImageIcon;
 
@@ -43,11 +43,13 @@ public class Game extends Thread {
 	private int combo=0;
 	private int maxCombo=0;
 	
-	final ConcurrentLinkedQueue<Note> noteList = new ConcurrentLinkedQueue<>();
+	private final ArrayList<Note> noteList = new ArrayList<>();
 	private boolean allNotesSpawned;
 
 	public boolean hasFinishedNotes() {
-		return allNotesSpawned && noteList.isEmpty();
+		synchronized (noteList) {
+			return allNotesSpawned && noteList.isEmpty();
+		}
 	}
 
 	public void drawResult(Graphics2D g) {
@@ -98,18 +100,19 @@ public class Game extends Thread {
 		// 5. note 이미지 - noteList(ArrayList)
 		Graphics2D noteGraphics = (Graphics2D) g.create();
 		noteGraphics.clipRect(0, 30, Main.SCREEN_WIDTH, 630);
-		for (Note note : noteList) {
-			if(note.hasMissed()) {
-				judgeImage = new ImageIcon(Main.class.getResource("images/judgeMiss.png")).getImage();
+		synchronized (noteList) {
+			for (int i = 0; i < noteList.size(); i++) {
+				Note note = noteList.get(i);
+				if (note.hasMissed()) {
+					judgeImage = new ImageIcon(Main.class.getResource("images/judgeMiss.png")).getImage();
+				}
+				if (!note.isProceeded()) {
+					noteList.remove(i);
+					i--;
+				} else {
+					note.screenDraw(noteGraphics);
+				}
 			}
-			if(!note.isProceeded()) {
-				noteList.remove(note);
-			}
-			else {
-				note.screenDraw(noteGraphics);
-			}
-			// 노트들을 그려준다    
-			// 나중에 그릴수록 레이어가 더 위에 올라옴 ==> 판정라인보다 노트가 더 위에 있어야 하니까 노트를 더 뒤에서 그려줌 
 		}
 		noteGraphics.dispose();
 		g.setColor(Color.white);
@@ -207,7 +210,9 @@ public class Game extends Thread {
 			if(beats[i].getTime() <= gameMusic.getTime()) { // 비트가 떨어지는 시간대가 gameMusic의 시간보다 작다면 (곡이 진행되고 있다면)  
 				Note note = new Note(beats[i].getNoteName(), instrument);  // 노트 만든다
 				note.start();
-				noteList.add(note);
+				synchronized (noteList) {
+					noteList.add(note);
+				}
 				i++;
 			}
 			if(!dropped) {
@@ -225,13 +230,15 @@ public class Game extends Thread {
 	
 	//<판정 함수> - 유저가 입력한 키가 실제 note의 키와 동일하면 Note.java의 judge함수에서 값을 받아서 judgeEvent 함수에 넘긴다. 
 	public void judge(String input) {
-		for (Note note : noteList) {
-			if(note.isProceeded() && input.equals(note.getNoteType())) {
-				String result = note.judge();
-				judgeEvent(result);
-				comboEvent(result);
-				totalScore += Grade.pointsFor(result);
-				break;
+		synchronized (noteList) {
+			for (Note note : noteList) {
+				if (note.isProceeded() && input.equals(note.getNoteType())) {
+					String result = note.judge();
+					judgeEvent(result);
+					comboEvent(result);
+					totalScore += Grade.pointsFor(result);
+					break;
+				}
 			}
 		}
 	}
