@@ -3,20 +3,14 @@
 package dynamic_beat_16;
 
 public class Beat {
-	private int time;
-	private String noteName;
+	private final int time;
+	private final String noteName;
 	
 	public int getTime() {
 		return time;
 	}
-	public void setTime(int time) {
-		this.time = time;
-	}
 	public String getNoteName() {
 		return noteName;
-	}
-	public void setNoteName(String noteName) {
-		this.noteName = noteName;
 	}
 	
 	public Beat(int time, String noteName) {

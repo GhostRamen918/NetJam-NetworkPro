@@ -230,7 +230,7 @@ public class Game extends Thread {
 				String result = note.judge();
 				judgeEvent(result);
 				comboEvent(result);
-				scoreEvent(Grade.pointsFor(result));
+				totalScore += Grade.pointsFor(result);
 				break;
 			}
 		}
@@ -272,25 +272,25 @@ public class Game extends Thread {
 //		}
 //	}
 	
-	//<채점 이벤트 함수> - Note.java의 judge결과에 따라 이미지를 노출한다. 
-	public void scoreEvent(int score) {
-		if(score==10) {
-			totalScore+=10;
-			//System.out.println("Total score="+totalScore);
-		}
-		else if(score==20) {
-			totalScore+=20;
-			//System.out.println("Total score="+totalScore);
-		}
-		else if(score==30) {
-			totalScore+=30;
-			//System.out.println("Total score="+totalScore);
-		}
-		else if(score==40) {
-			totalScore+=40;
-			//System.out.println("Total score="+totalScore);
-		}
-	}
+//	//<채점 이벤트 함수> - Note.java의 judge결과에 따라 이미지를 노출한다.
+//	public void scoreEvent(int score) {
+//		if(score==10) {
+//			totalScore+=10;
+//			//System.out.println("Total score="+totalScore);
+//		}
+//		else if(score==20) {
+//			totalScore+=20;
+//			//System.out.println("Total score="+totalScore);
+//		}
+//		else if(score==30) {
+//			totalScore+=30;
+//			//System.out.println("Total score="+totalScore);
+//		}
+//		else if(score==40) {
+//			totalScore+=40;
+//			//System.out.println("Total score="+totalScore);
+//		}
+//	}
 	
 	//<콤보 이벤트 함수> - Note.java의 judge결과에 따라 콤보 수를 계산한다.
 	public void comboEvent(String judge) {

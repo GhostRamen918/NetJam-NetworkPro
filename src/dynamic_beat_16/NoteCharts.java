@@ -3,7 +3,6 @@ package dynamic_beat_16;
 import java.awt.event.KeyEvent;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
 public final class NoteCharts {
 
@@ -17,7 +16,7 @@ public final class NoteCharts {
 			new Lane("K", KeyEvent.VK_K, 848, 1, "drumSmall1.mp3"),
 			new Lane("L", KeyEvent.VK_L, 952, 1, "drumSmall1.mp3"))),
 		DRUM,
-		BASS(Direction.UP, 100, List.of(
+		BASS(Direction.DOWN, 580, List.of(
 			new Lane("D", KeyEvent.VK_D, 434, 1, null),
 			new Lane("F", KeyEvent.VK_F, 538, 1, null),
 			new Lane("J", KeyEvent.VK_J, 642, 1, null),
@@ -25,9 +24,9 @@ public final class NoteCharts {
 		KEYBOARD,
 		GUITAR;
 
-		final Direction direction;
-		final int judgementY;
-		final List<Lane> lanes;
+		Direction direction;
+		int judgementY;
+		List<Lane> lanes;
 
 		Instrument() {
 			this(Direction.DOWN, 580, List.of());
@@ -50,9 +49,9 @@ public final class NoteCharts {
 	}
 
 	enum Direction {
-		DOWN(1), UP(-1);
+		DOWN(1);
 
-		final int step;
+		int step;
 
 		Direction(int step) {
 			this.step = step;
@@ -66,14 +65,14 @@ public final class NoteCharts {
 	private record ChartKey(String musicFile, String difficulty, Instrument instrument) {}
 
 	// 같은 곡이라도 난이도와 악기 조합마다 별도의 악보를 등록할 수 있다.
-	private static final Map<ChartKey, Supplier<Beat[]>> CHARTS = Map.of(
-		new ChartKey("Bensound - Energy.mp3", "Easy", Instrument.DEFAULT), NoteCharts::singleNote,
-		new ChartKey("Bensound - Energy.mp3", "Hard", Instrument.DEFAULT), NoteCharts::singleNote,
-		new ChartKey("Bensound - Energy.mp3", "Easy", Instrument.BASS), NoteCharts::energyBassEasy,
-		new ChartKey("Joakim Karud - Wild Flower.mp3", "Easy", Instrument.DEFAULT), NoteCharts::singleNote,
-		new ChartKey("Joakim Karud - Wild Flower.mp3", "Hard", Instrument.DEFAULT), NoteCharts::singleNote,
-		new ChartKey("Joakim Karud - Mighty Love.mp3", "Easy", Instrument.DEFAULT), NoteCharts::mightyLoveEasy,
-		new ChartKey("Joakim Karud - Mighty Love.mp3", "Hard", Instrument.DEFAULT), NoteCharts::singleNote
+	private static final Map<ChartKey, Beat[]> CHARTS = Map.of(
+		new ChartKey("Bensound - Energy.mp3", "Easy", Instrument.DEFAULT), singleNote(),
+		new ChartKey("Bensound - Energy.mp3", "Hard", Instrument.DEFAULT), singleNote(),
+		new ChartKey("Bensound - Energy.mp3", "Easy", Instrument.BASS), energyBassEasy(),
+		new ChartKey("Joakim Karud - Wild Flower.mp3", "Easy", Instrument.DEFAULT), singleNote(),
+		new ChartKey("Joakim Karud - Wild Flower.mp3", "Hard", Instrument.DEFAULT), singleNote(),
+		new ChartKey("Joakim Karud - Mighty Love.mp3", "Easy", Instrument.DEFAULT), mightyLoveEasy(),
+		new ChartKey("Joakim Karud - Mighty Love.mp3", "Hard", Instrument.DEFAULT), singleNote()
 	);
 
 	private NoteCharts() {}
@@ -83,11 +82,11 @@ public final class NoteCharts {
 	}
 
 	public static Beat[] getBeats(String musicFile, String difficulty, Instrument instrument) {
-		Supplier<Beat[]> chart = CHARTS.get(new ChartKey(musicFile, difficulty, instrument));
+		Beat[] chart = CHARTS.get(new ChartKey(musicFile, difficulty, instrument));
 		if (chart == null) {
 			throw new IllegalArgumentException("Missing chart for " + musicFile + " / " + difficulty + " / " + instrument);
 		}
-		return chart.get();
+		return chart.clone();
 	}
 
 	private static Beat[] singleNote() {

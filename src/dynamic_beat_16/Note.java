@@ -10,11 +10,11 @@ import dynamic_beat_16.NoteCharts.Lane;
 
 public class Note extends Thread {
 	private static final int TRAVEL_DISTANCE = 1000 / Main.SLEEP_TIME * Main.NOTE_SPEED * Main.REACH_TIME;
-	private final Image noteBasicImage = new ImageIcon(Main.class.getResource("images/noteBasic.png")).getImage();
-	private final Lane lane;
-	private final Instrument instrument;
-	private volatile int y;
-	private volatile boolean proceeded = true;
+	private Image noteBasicImage = new ImageIcon(Main.class.getResource("images/noteBasic.png")).getImage();
+	private Lane lane;
+	private Instrument instrument;
+	private int y;
+	private boolean proceeded = true;
 
 	public Note(String noteType) {
 		this(noteType, Instrument.DEFAULT);

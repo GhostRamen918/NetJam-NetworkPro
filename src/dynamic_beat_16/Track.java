@@ -6,9 +6,9 @@ public class Track {
 
 	private String titleImage; // 제목부분 이미지 
 	private String startImage; // 게임 선택 창 표지 이미지 
-	private String gameImage; // 해당 곡 실행 시 표지 이미지 
-	private String startMusic; // 게임선택 창에서 나오는 30초짜리 음악 
-	private String gameMusic; // 해당 곡 선택했을 때 (게임시작 후) 나오는 노래 
+	private String gameImage; // 곡 실행 시 표지 이미지
+	private String startMusic; // 게임선택 창에서 나오는 미리듣기
+	private String gameMusic; // 게임시작 후 나오는 노래
 	private String titleName; // 곡 제목 
 	
 	public String getTitleImage() {
@@ -47,8 +47,7 @@ public class Track {
 	public void setTitleName(String gameMusic) {
 		this.titleName = titleName;
 	}
-	
-	// <생성자> - 변수 초기화 
+
 	public Track(String titleImage, String startImage, String gameImage, String startMusic, String gameMusic, String titleName) {
 		super();
 		this.titleImage = titleImage;

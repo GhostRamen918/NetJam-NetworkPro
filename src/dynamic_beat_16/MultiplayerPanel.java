@@ -26,7 +26,7 @@ final class MultiplayerPanel extends JPanel {
 	private static final Color BACKGROUND = Color.WHITE;
 	private static final Color TEXT = Color.BLACK;
 	private static final Color MUTED = Color.GRAY;
-	private static final Color BORDER = Color.WHITE;
+	private static final Color BORDER = Color.LIGHT_GRAY;
 	private static final Color LOCAL_PLAYER_BACKGROUND = Color.LIGHT_GRAY;
 	private static final Color TEAL = new Color(0, 107, 124);
 	private static final Room[] PREVIEW_ROOMS = {
