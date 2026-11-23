@@ -44,7 +44,7 @@ public class DynamicBeat extends JFrame {
 
 	private Image background = new ImageIcon(Main.class.getResource("images/introBackground(Title2).jpg"))
 			.getImage();
-	private JLabel menuBar = new JLabel(new ImageIcon(Main.class.getResource("images/menuBar.png")));
+	private JLabel menuBarLabel = new JLabel(new ImageIcon(Main.class.getResource("images/menuBar.png")));
 
 	private JButton exitButton = new JButton(exitButtonBasicImage);
 	private JButton startButton = new JButton(startButtonBasicImage);
@@ -355,15 +355,15 @@ public class DynamicBeat extends JFrame {
 		});
 		add(backButton);
 
-		menuBar.setBounds(0, 0, 1280, 30);
-		menuBar.addMouseListener(new MouseAdapter() {
+		menuBarLabel.setBounds(0, 0, 1280, 30);
+		menuBarLabel.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				mouseX = e.getX();
 				mouseY = e.getY();
 			}
 		});
-		menuBar.addMouseMotionListener(new MouseMotionAdapter() {
+		menuBarLabel.addMouseMotionListener(new MouseMotionAdapter() {
 			@Override
 			public void mouseDragged(MouseEvent e) {
 				int x = e.getXOnScreen();
@@ -371,7 +371,7 @@ public class DynamicBeat extends JFrame {
 				setLocation(x - mouseX, y - mouseY);
 			}
 		});
-		add(menuBar);
+		add(menuBarLabel);
 
 
 	}

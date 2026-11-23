@@ -39,15 +39,15 @@ final class InstrumentSelectionPanel extends JPanel {
 	private static JButton arrowButton(String direction, String label, Runnable onClick) {
 		ImageIcon basic = new ImageIcon(Main.class.getResource("images/" + direction + "ButtonBasic.png"));
 		ImageIcon hover = new ImageIcon(Main.class.getResource("images/" + direction + "ButtonEntered.png"));
-		JButton button = new JButton(basic);
-		button.setRolloverIcon(hover);
-		button.setPreferredSize(new Dimension(60, 60));
-		button.setContentAreaFilled(false);
-		button.setBorderPainted(false);
-		button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-		button.setToolTipText(label);
-		button.getAccessibleContext().setAccessibleName(label);
-		button.addActionListener(e -> onClick.run());
-		return button;
+		JButton arrowButton = new JButton(basic);
+		arrowButton.setRolloverIcon(hover);
+		arrowButton.setPreferredSize(new Dimension(60, 60));
+		arrowButton.setContentAreaFilled(false);
+		arrowButton.setBorderPainted(false);
+		arrowButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		arrowButton.setToolTipText(label);
+		arrowButton.getAccessibleContext().setAccessibleName(label);
+		arrowButton.addActionListener(e -> onClick.run());
+		return arrowButton;
 	}
 }

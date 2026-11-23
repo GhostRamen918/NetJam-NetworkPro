@@ -51,7 +51,7 @@ public class DynamicBeat extends JFrame {
 
 	private Image background = new ImageIcon(Main.class.getResource("images/introBackground(Title2).jpg"))
 			.getImage();
-	private JLabel menuBar = new JLabel(new ImageIcon(Main.class.getResource("images/menuBar.png")));
+	private JLabel menuBarLabel = new JLabel(new ImageIcon(Main.class.getResource("images/menuBar.png")));
 
 	private JButton exitButton = new JButton(exitButtonBasicImage);
 	private JButton startButton = new JButton(startButtonBasicImage);
@@ -64,7 +64,7 @@ public class DynamicBeat extends JFrame {
 	private final JButton singlePlayerButton = new JButton("싱글플레이");
 	private final JButton multiplayerButton = new JButton("멀티플레이");
 	private final InstrumentSelectionPanel instrumentPanel = new InstrumentSelectionPanel(this::chooseInstrument);
-	private final JLabel InstChartInfo = new JLabel("Bass");
+	private final JLabel instrumentChartInfoLabel = new JLabel("Bass");
 	private Instrument instrument = Instrument.DEFAULT;
 	private final MultiplayerPanel multiplayerPanel = new MultiplayerPanel(this::enterMain);
 	
@@ -409,15 +409,15 @@ public class DynamicBeat extends JFrame {
 		});
 		add(backButton);
 
-		menuBar.setBounds(0, 0, 1280, 30);
-		menuBar.addMouseListener(new MouseAdapter() {
+		menuBarLabel.setBounds(0, 0, 1280, 30);
+		menuBarLabel.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				mouseX = e.getX();
 				mouseY = e.getY();
 			}
 		});
-		menuBar.addMouseMotionListener(new MouseMotionAdapter() {
+		menuBarLabel.addMouseMotionListener(new MouseMotionAdapter() {
 			@Override
 			public void mouseDragged(MouseEvent e) {
 				int x = e.getXOnScreen();
@@ -425,7 +425,7 @@ public class DynamicBeat extends JFrame {
 				setLocation(x - mouseX, y - mouseY);
 			}
 		});
-		add(menuBar);
+		add(menuBarLabel);
 
 		new Timer(10, e -> {
 			updateGameEnd();
@@ -627,7 +627,7 @@ public class DynamicBeat extends JFrame {
 		rightButton.setVisible(visible);
 		easyButton.setVisible(visible);
 		hardButton.setVisible(visible);
-		InstChartInfo.setVisible(visible && instrument == Instrument.BASS);
+		instrumentChartInfoLabel.setVisible(visible && instrument == Instrument.BASS);
 	}
 
 }
