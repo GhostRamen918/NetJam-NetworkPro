@@ -144,7 +144,7 @@ public class Game extends Thread {
 		// 7. 곡정보 - 4) 콤보
 		g.setColor(Color.YELLOW);
 		g.setFont(new Font("Arial", Font.BOLD, 30));
-		g.drawString(Integer.toString(combo), 850, 702);
+		g.drawString(Integer.toString(combo), 1140, 350);
 		// 6. 각각의 note가 키보드에서 어떤 키인지 알려주는 문구  
 		g.setFont(new Font("Arial", Font.PLAIN, 26));
 		g.setColor(Color.DARK_GRAY);

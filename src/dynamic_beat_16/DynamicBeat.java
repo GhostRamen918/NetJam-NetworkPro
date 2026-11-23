@@ -3,6 +3,7 @@ package dynamic_beat_16;
 
 import java.awt.Color;
 import java.awt.Cursor;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -19,6 +20,10 @@ import javax.swing.JPanel;
 import javax.swing.Timer;
 
 public class DynamicBeat extends JFrame {
+
+	private enum GameState {
+		INTRO, MAIN, SELECT, PLAYING, FADING_OUT, RESULT
+	}
 
 	private ImageIcon exitButtonEnteredImage = new ImageIcon(Main.class.getResource("images/exitButtonEntered.png"));
 	private ImageIcon exitButtonBasicImage = new ImageIcon(Main.class.getResource("images/exitButtonBasic.png"));
@@ -52,11 +57,12 @@ public class DynamicBeat extends JFrame {
 	private JButton easyButton = new JButton(easyButtonBasicImage);
 	private JButton hardButton = new JButton(hardButtonBasicImage);
 	private JButton backButton = new JButton(backButtonBasicImage);
+	private final JButton singlePlayerButton = new JButton("싱글플레이");
+	private final JButton multiplayerButton = new JButton("멀티플레이 (준비 중)");
 	
 	private int mouseX, mouseY;
 
-	private boolean isMainScreen = false;
-	private boolean isGameScreen = false;
+	private GameState state = GameState.INTRO;
 	private static final long RESULT_FADE_NANOS = 1_500_000_000L;
 	private Game completedGame;
 	private long fadeStartedAt;
@@ -85,7 +91,7 @@ public class DynamicBeat extends JFrame {
 		@Override
 		public void paint(Graphics g) {
 			super.paint(g);
-			if (isGameScreen && completedGame != null) {
+			if (state == GameState.FADING_OUT) {
 				Graphics overlay = g.create();
 				overlay.setColor(new Color(0, 0, 0, fadeOpacity));
 				overlay.fillRect(0, 0, getWidth(), getHeight());
@@ -216,6 +222,19 @@ public class DynamicBeat extends JFrame {
 			}
 		});
 		add(quitButton);
+
+		Font modeButtonFont = new Font("Dialog", Font.BOLD, 26);
+		singlePlayerButton.setBounds(490, 260, 300, 70);
+		singlePlayerButton.setFont(modeButtonFont);
+		singlePlayerButton.setVisible(false);
+		singlePlayerButton.addActionListener(e -> enterTrackSelection());
+		add(singlePlayerButton);
+
+		multiplayerButton.setBounds(490, 350, 300, 70);
+		multiplayerButton.setFont(modeButtonFont);
+		multiplayerButton.setVisible(false);
+		multiplayerButton.setEnabled(false);
+		add(multiplayerButton);
 
 		// leftButton
 		leftButton.setVisible(false);
@@ -369,7 +388,7 @@ public class DynamicBeat extends JFrame {
 				Music buttonEnteredMusic = new Music("buttonPressedMusic.mp3", false);
 				buttonEnteredMusic.start();
 				// 백버튼 이벤트 
-				backMain();
+				goBack();
 			}
 		});
 		add(backButton);
@@ -400,36 +419,34 @@ public class DynamicBeat extends JFrame {
 	}
 
 	public void screenDraw(Graphics2D g) {
-		if (completedGame != null && !isGameScreen) {
+		if (state == GameState.RESULT) {
 			completedGame.drawResult(g);
 			return;
 		}
 		g.drawImage(background, 0, 0, null);
-		if(isMainScreen) {
+		if (state == GameState.SELECT) {
 			g.drawImage(selectedImage, 340, 100, null);
 			g.drawImage(titleImage, 340, 110, null);
-		}
-		if (isGameScreen) {
-			Game displayedGame = completedGame == null ? game : completedGame;
-			displayedGame.screenDraw(g);
+		} else if (state == GameState.PLAYING) {
+			game.screenDraw(g);
+		} else if (state == GameState.FADING_OUT) {
+			completedGame.screenDraw(g);
 		}
 		// 버튼은 패널이 알아서 그리고, 반복해서 다시 그리는 건 Timer가 담당
 	}
 	
 	private void updateGameEnd() {
-		if (!isGameScreen) {
-			return;
-		}
-		if (completedGame == null) {
-			if (game.hasFinishedNotes()) {
-				completedGame = game;
-				game = null;
-				fadeStartedAt = System.nanoTime();
+		if (state == GameState.PLAYING && game.hasFinishedNotes()) {
+			completedGame = game;
+			game = null;
+			fadeStartedAt = System.nanoTime();
+			state = GameState.FADING_OUT;
+		} else if (state == GameState.FADING_OUT) {
+			if (fadeOpacity == 255) {
+				completedGame.close();
+				state = GameState.RESULT;
+				return;
 			}
-		} else if (fadeOpacity == 255) {
-			completedGame.close();
-			isGameScreen = false;
-		} else {
 			long elapsed = System.nanoTime() - fadeStartedAt;
 			fadeOpacity = (int) Math.min(255, elapsed * 255 / RESULT_FADE_NANOS);
 		}
@@ -473,63 +490,69 @@ public class DynamicBeat extends JFrame {
 	public void gameStart(int nowSelected, String difficulty) {
 		if(selectedMusic != null) // 이미 어떤 음악이 실행중이라면 그 음악 중지시킴 
 			selectedMusic.close();
-		isMainScreen=false; // 메인화면이 아니라고 알려줌 ==> screenDraw에서 if (isMainScreen) 실행되지 않도록 해줌.  
-		// 게임화면으로 넘어가면서 메인화면에 있던 버튼들 숨김
-		leftButton.setVisible(false);
-		rightButton.setVisible(false);
-		easyButton.setVisible(false);
-		hardButton.setVisible(false);
+		selectedMusic = null;
+		setTrackButtonsVisible(false);
 		// 게임화면으로 넘어갔으니 배경 이미지 바꿔줌
 		background = new ImageIcon(Main.class.getResource("images/"+trackList.get(nowSelected).getGameImage())).getImage();
 		backButton.setVisible(true);
-		isGameScreen = true;
+		state = GameState.PLAYING;
 		game = new Game(trackList.get(nowSelected).getTitleName(), difficulty, trackList.get(nowSelected).getGameMusic());
 		game.start(); // Game.java의 run함수가 실행됨 
 		setFocusable(true); //게임창 (메인 프레임)에 키보드 포커스가 맞춰져 있도록 
+		requestFocusInWindow();
 		// 화면이 바뀜에 따라 focus가 맞지 않을 수도 있음.
 		// 게임 시작 시에 항상 main에 키보드 포커스가 맞춰져 있어야 키보드를 눌렀을 때 키보드 이벤트가 정상적으로 작동함.
 	}
 	
-	// <메인으로 돌아가는 함수>
-	public void backMain(){
-		if (game != null) {
+	private void goBack() {
+		if (state == GameState.SELECT) {
+			selectedMusic.close();
+			selectedMusic = null;
+			enterMain();
+			return;
+		}
+		if (state == GameState.PLAYING) {
 			game.close();
 			game = null;
-		} else if (isGameScreen && completedGame != null) {
+		} else if (state == GameState.FADING_OUT) {
 			completedGame.close();
 		}
 		completedGame = null;
 		fadeOpacity = 0;
-		isGameScreen = false;
-		isMainScreen = true;
-		// 버튼 처리 - 메인화면에 나오는 버튼들 노출시킴 
-		leftButton.setVisible(true);
-		rightButton.setVisible(true);
-		easyButton.setVisible(true);
-		hardButton.setVisible(true);
-		// 배경 처리 
-		background = new ImageIcon(Main.class.getResource("images/mainBackground.jpg")).getImage();
-		// 버튼 처리 - 게임화면에 나오는 버튼 숨김
-		backButton.setVisible(false);
-		selectTrack(nowSelected);
+		enterTrackSelection();
 	}
 	
 	// <시작버튼 이벤트 처리 함수> 
 	// : intro화면 → 메인 화면 
 	public void enterMain() {
-		// 버튼 처리 - 인트로 화면에 있던 버튼들 숨김 
+		if (state == GameState.INTRO) {
+			introMusic.close();
+		}
+		state = GameState.MAIN;
 		startButton.setVisible(false);
 		quitButton.setVisible(false);
-		// 배경 이미지 변경 
+		setTrackButtonsVisible(false);
+		backButton.setVisible(false);
 		background = new ImageIcon(Main.class.getResource("images/mainBackground.jpg")).getImage();
-		isMainScreen = true;
-		// 버튼 처리 - 메인화면에 나오는 버튼들 노출시킴
-		leftButton.setVisible(true);
-		rightButton.setVisible(true);
-		easyButton.setVisible(true);
-		hardButton.setVisible(true);
-		introMusic.close();
-		selectTrack(0);
+		singlePlayerButton.setVisible(true);
+		multiplayerButton.setVisible(true);
+	}
+
+	private void enterTrackSelection() {
+		state = GameState.SELECT;
+		singlePlayerButton.setVisible(false);
+		multiplayerButton.setVisible(false);
+		setTrackButtonsVisible(true);
+		backButton.setVisible(true);
+		background = new ImageIcon(Main.class.getResource("images/mainBackground.jpg")).getImage();
+		selectTrack(nowSelected);
+	}
+
+	private void setTrackButtonsVisible(boolean visible) {
+		leftButton.setVisible(visible);
+		rightButton.setVisible(visible);
+		easyButton.setVisible(visible);
+		hardButton.setVisible(visible);
 	}
 
 }
