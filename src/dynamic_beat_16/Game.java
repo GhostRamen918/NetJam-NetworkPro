@@ -44,7 +44,7 @@ public class Game extends Thread {
 	private int maxCombo=0;
 	
 	final ConcurrentLinkedQueue<Note> noteList = new ConcurrentLinkedQueue<>();
-	private volatile boolean allNotesSpawned;
+	private boolean allNotesSpawned;
 
 	public boolean hasFinishedNotes() {
 		return allNotesSpawned && noteList.isEmpty();

@@ -62,7 +62,6 @@ public class DynamicBeat extends JFrame {
 	private final JButton singlePlayerButton = new JButton("싱글플레이");
 	private final JButton multiplayerButton = new JButton("멀티플레이");
 	private final InstSelectPanel instrumentPanel = new InstSelectPanel(() -> refreshInstrumentSelect());
-	private final JLabel instrumentChartInfoLabel = new JLabel("Bass");
 	private final MultiplayerPanel multiplayerPanel = new MultiplayerPanel(() -> enterMain());
 	
 	private int mouseX, mouseY;
@@ -598,7 +597,6 @@ public class DynamicBeat extends JFrame {
 		rightButton.setVisible(visible);
 		easyButton.setVisible(visible);
 		hardButton.setVisible(visible);
-		instrumentChartInfoLabel.setVisible(visible && instrumentPanel.getSelectedInstrument() == Instrument.BASS);
 	}
 
 }
