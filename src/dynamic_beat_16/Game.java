@@ -50,6 +50,7 @@ public class Game extends Thread {
 	// 점수
 	private int totalScore=0;
 	private int combo=0;
+	private int maxCombo=0;
 	
 	ArrayList<Note> noteList = new ArrayList<Note>();
 	
@@ -556,5 +557,8 @@ public class Game extends Thread {
 			combo++;
 		else
 			combo = 0;
+		
+		if(maxCombo < combo)
+			maxCombo = combo;
 	}
 }
