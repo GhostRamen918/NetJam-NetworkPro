@@ -47,6 +47,7 @@ public class Game extends Thread {
 	private boolean allNotesSpawned;
 
 	public boolean hasFinishedNotes() {
+		// 다른 스레드가 같이 쓰고 있어서 안전하게 쓰기 위해
 		synchronized (noteList) {
 			return allNotesSpawned && noteList.isEmpty();
 		}
@@ -99,7 +100,6 @@ public class Game extends Thread {
 		g.drawImage(judgementLineImage, 0, instrument.judgementY, null); // 판정선(빨간색 위아래 두 줄) 이미지
 		// 5. note 이미지 - noteList(ArrayList)
 		Graphics2D noteGraphics = (Graphics2D) g.create();
-		noteGraphics.clipRect(0, 30, Main.SCREEN_WIDTH, 630);
 		synchronized (noteList) {
 			for (int i = 0; i < noteList.size(); i++) {
 				Note note = noteList.get(i);

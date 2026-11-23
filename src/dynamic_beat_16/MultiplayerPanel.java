@@ -16,7 +16,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerNumberModel;
 
 final class MultiplayerPanel extends JPanel {
-	private static final Room[] PREVIEW_ROOMS = {
+	private Room[] previewRooms = {
 		new Room("012", "예시용", 2, 6)
 	};
 
@@ -62,7 +62,7 @@ final class MultiplayerPanel extends JPanel {
 		JPanel pagePanel = new JPanel(new BorderLayout(0, 16));
 		JButton backButton = new JButton("메인 메뉴");
 		backButton.addActionListener(e -> leaveMultiplayer.run());
-		pagePanel.add(header("멀티플레이", backButton), BorderLayout.NORTH);
+		pagePanel.add(headerPanel("멀티플레이", backButton), BorderLayout.NORTH);
 
 		JPanel centerPanel = new JPanel();
 		centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
@@ -75,13 +75,13 @@ final class MultiplayerPanel extends JPanel {
 		JPanel roomMakePanel = new JPanel(new GridLayout(2, 1, 0, 14));
 		// 인원수는 스피너의 화살표로 선택한다.
 		((JSpinner.DefaultEditor) capacitySpinner.getEditor()).getTextField().setEditable(false);
-		roomMakePanel.add(formField("방 이름", roomNameTextField));
-		roomMakePanel.add(formField("최대 인원", capacitySpinner));
+		roomMakePanel.add(formFieldPanel("방 이름", roomNameTextField));
+		roomMakePanel.add(formFieldPanel("최대 인원", capacitySpinner));
 		formPanel.add(roomMakePanel, BorderLayout.CENTER);
 
 		JButton createRoomButton = new JButton("방 만들기");
 		createRoomButton.addActionListener(e -> {
-			String name = roomNameTextField.getText().strip();
+			String name = roomNameTextField.getText().trim();
 			if (name.isEmpty() || name.length() > 24) {
 				errorLabel.setText("방 이름을 1~24자로 입력해 주세요.");
 				roomNameTextField.requestFocusInWindow();
@@ -97,9 +97,7 @@ final class MultiplayerPanel extends JPanel {
 		formPanel.add(actionPanel, BorderLayout.SOUTH);
 		roomSelectionPanel.add(formPanel);
 		roomSelectionPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, roomSelectionPanel.getPreferredSize().height));
-		centerPanel.add(Box.createVerticalGlue());
 		centerPanel.add(roomSelectionPanel);
-		centerPanel.add(Box.createVerticalGlue());
 		pagePanel.add(centerPanel, BorderLayout.CENTER);
 		return pagePanel;
 	}
@@ -109,7 +107,7 @@ final class MultiplayerPanel extends JPanel {
 		roomListPanel.setLayout(new BorderLayout(0, 18));
 		roomListPanel.add(new JLabel("열린 방"), BorderLayout.NORTH);
 
-		JList<Room> roomList = new JList<>(PREVIEW_ROOMS);
+		JList<Room> roomList = new JList<>(previewRooms);
 		roomList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		JScrollPane roomScrollPane = new JScrollPane(roomList);
 		roomListPanel.add(roomScrollPane, BorderLayout.CENTER);
@@ -144,7 +142,7 @@ final class MultiplayerPanel extends JPanel {
 		roomActionPanel.add(settingsButton);
 		roomActionPanel.add(leaveButton);
 		JPanel topPanel = new JPanel(new BorderLayout(0, 16));
-		topPanel.add(header("멀티플레이 / 대기실", roomActionPanel), BorderLayout.NORTH);
+		topPanel.add(headerPanel("멀티플레이 / 대기실", roomActionPanel), BorderLayout.NORTH);
 		JPanel roomPanel = new JPanel();
 		roomPanel.setLayout(new BorderLayout(18, 0));
 		roomPanel.add(new JLabel("방 번호  " + selectedRoom.number), BorderLayout.WEST);
@@ -167,7 +165,7 @@ final class MultiplayerPanel extends JPanel {
 		for (int i = 1; i < occupied; i++) {
 			slotPanel.add(participantSlot("참가자 " + (i + 1), "준비 전"));
 		}
-		slotPanel.add(participantSlot(occupied == 0 ? "나 · 방장" : "나", "준비 전"));
+		slotPanel.add(participantSlot(occupied == 0 ? "나" : "나", "준비 전"));
 		for (int i = participantsCount; i < capacity; i++) {
 			slotPanel.add(participantSlot("참가자 기다리는 중", ""));
 		}
@@ -202,14 +200,14 @@ final class MultiplayerPanel extends JPanel {
 		return slotPanel;
 	}
 
-	private static JPanel header(String title, JComponent actionComponent) {
+	private static JPanel headerPanel(String title, JComponent actionComponent) {
 		JPanel headerPanel = new JPanel(new BorderLayout(12, 0));
 		headerPanel.add(new JLabel(title), BorderLayout.EAST);
 		headerPanel.add(actionComponent, BorderLayout.WEST);
 		return headerPanel;
 	}
 
-	private static JPanel formField(String name, JComponent inputComponent) {
+	private static JPanel formFieldPanel(String name, JComponent inputComponent) {
 		JPanel fieldPanel = new JPanel(new BorderLayout(0, 6));
 		JLabel captionLabel = new JLabel(name);
 		fieldPanel.add(captionLabel, BorderLayout.NORTH);
