@@ -22,7 +22,7 @@ import javax.swing.Timer;
 public class DynamicBeat extends JFrame {
 
 	private enum GameState {
-		INTRO, MAIN, SELECT, PLAYING, FADING_OUT, RESULT
+		INTRO, MAIN, SELECT, PLAYING, FADING_OUT, RESULT, MULTIPLAYER
 	}
 
 	private ImageIcon exitButtonEnteredImage = new ImageIcon(Main.class.getResource("images/exitButtonEntered.png"));
@@ -58,7 +58,8 @@ public class DynamicBeat extends JFrame {
 	private JButton hardButton = new JButton(hardButtonBasicImage);
 	private JButton backButton = new JButton(backButtonBasicImage);
 	private final JButton singlePlayerButton = new JButton("싱글플레이");
-	private final JButton multiplayerButton = new JButton("멀티플레이 (준비 중)");
+	private final JButton multiplayerButton = new JButton("멀티플레이");
+	private final MultiplayerPanel multiplayerPanel = new MultiplayerPanel(this::enterMain);
 	
 	private int mouseX, mouseY;
 
@@ -233,8 +234,11 @@ public class DynamicBeat extends JFrame {
 		multiplayerButton.setBounds(490, 350, 300, 70);
 		multiplayerButton.setFont(modeButtonFont);
 		multiplayerButton.setVisible(false);
-		multiplayerButton.setEnabled(false);
+		multiplayerButton.addActionListener(e -> enterMultiplayer());
 		add(multiplayerButton);
+		multiplayerPanel.setBounds(0, 30, Main.SCREEN_WIDTH, Main.SCREEN_HEIGHT - 30);
+		multiplayerPanel.setVisible(false);
+		add(multiplayerPanel);
 
 		// leftButton
 		leftButton.setVisible(false);
@@ -529,6 +533,7 @@ public class DynamicBeat extends JFrame {
 			introMusic.close();
 		}
 		state = GameState.MAIN;
+		multiplayerPanel.setVisible(false);
 		startButton.setVisible(false);
 		quitButton.setVisible(false);
 		setTrackButtonsVisible(false);
@@ -536,6 +541,14 @@ public class DynamicBeat extends JFrame {
 		background = new ImageIcon(Main.class.getResource("images/mainBackground.jpg")).getImage();
 		singlePlayerButton.setVisible(true);
 		multiplayerButton.setVisible(true);
+	}
+
+	private void enterMultiplayer() {
+		state = GameState.MULTIPLAYER;
+		singlePlayerButton.setVisible(false);
+		multiplayerButton.setVisible(false);
+		multiplayerPanel.showCreateRoom();
+		multiplayerPanel.setVisible(true);
 	}
 
 	private void enterTrackSelection() {

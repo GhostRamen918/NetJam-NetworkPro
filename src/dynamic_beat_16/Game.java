@@ -42,7 +42,7 @@ public class Game extends Thread {
 	// 7. 곡정보 - 1) 곡 제목 , 3) 난이도 
 	private String titleName;
 	private String difficulty;
-	private String musicTitle;
+	private final Beat[] beats;
 	
 	// 게임 음악 
 	private Music gameMusic;
@@ -53,7 +53,7 @@ public class Game extends Thread {
 	private int maxCombo=0;
 	
 	ArrayList<Note> noteList = new ArrayList<Note>();
-	private volatile boolean allNotesSpawned;
+	private boolean allNotesSpawned;
 
 	public boolean hasFinishedNotes() {
 		return allNotesSpawned && noteList.isEmpty();
@@ -80,11 +80,14 @@ public class Game extends Thread {
 	
 	// <생성자> - 초기화 
 	public Game(String titleName, String difficulty, String musicTitle) {
+		this(titleName, difficulty, musicTitle, NoteCharts.Instrument.DEFAULT);
+	}
+
+	public Game(String titleName, String difficulty, String musicTitle, NoteCharts.Instrument instrument) {
 		this.titleName = titleName;
 		this.difficulty = difficulty;
-		this.musicTitle = musicTitle;
-		gameMusic = new Music(this.musicTitle, false);
-		
+		this.beats = NoteCharts.getBeats(musicTitle, difficulty, instrument);
+		gameMusic = new Music(musicTitle, false);
 	}
 	
 	// 게임 화면에서 그려줘야 하는 요소들 
@@ -253,7 +256,7 @@ public class Game extends Thread {
 	// <run 함수> Game 클래스에서 만든 instance 변수는 run 메소드 안에 있는 내용을 실행한다. 
 	@Override
 	public void run() {
-		dropNotes(this.titleName);
+		dropNotes();
 	}
 	
 	// <Game 쓰레드 종료 함수> 
@@ -263,225 +266,7 @@ public class Game extends Thread {
 	}
 	
 	// <note 떨어뜨리는 함수>
-	public void dropNotes(String titleName) { 
-		Beat[] beats = null;
-		/*
-		 * Beat[] beats = { 
-		 * new Beat(1000, "S"), // 1초에 S 떨어지게 
-		 * new Beat(2000, "D"), //2초에 D 떨어지게 
-		 * new Beat(3000, "F"), // 3초에 F 떨어지게 
-		 * };
-		 */
-		// Beat 생성 - 곡별로 음표와 시간 설정 (like 악보 그리기) - 곡1-1) Easy 
-		if(titleName.equals("Joakim Karud - Mighty Love") && difficulty.equals("Easy") ) {
-			int startTime = 4460 - Main.REACH_TIME*1000;
-			Beat.START_TIME = startTime;
-			int gap = 125; // 125/1000 = 1/8 ==> 박자 계산을 위해서..
-			beats = new Beat[] { // 배열 초기화 ==> 곡에 따라 비트 다르니까..
-					new Beat(gap*1, "S"),
-					new Beat(gap*3, "D"),
-					new Beat(gap*5, "S"),
-					new Beat(gap*7, "D"),
-					new Beat(gap*9, "S"),
-					new Beat(gap*11, "D"),
-					new Beat(gap*13, "S"),
-					new Beat(gap*15, "D"),
-					new Beat(gap*18, "J"),
-					new Beat(gap*20, "K"),
-					new Beat(gap*22, "J"),
-					new Beat(gap*24, "K"),
-					new Beat(gap*26, "J"),
-					new Beat(gap*28, "K"),
-					new Beat(gap*30, "J"),
-					new Beat(gap*32, "K"),
-					new Beat(gap*35, "S"),
-					new Beat(gap*37, "D"),
-					new Beat(gap*39, "S"),
-					new Beat(gap*41, "D"),
-					new Beat(gap*43, "S"),
-					new Beat(gap*45, "D"),
-					new Beat(gap*48, "J"),
-					new Beat(gap*49, "K"),
-					new Beat(gap*50, "L"),
-					new Beat(gap*52, "F"),
-					new Beat(gap*52, "Space"),
-					new Beat(gap*52, "J"),
-					new Beat(gap*54, "S"),
-					new Beat(gap*56, "D"),
-					new Beat(gap*59, "F"),
-					new Beat(gap*59, "Space"),
-					new Beat(gap*59, "J"),
-					new Beat(gap*61, "L"),
-					new Beat(gap*63, "K"),
-					new Beat(gap*65, "F"),
-					new Beat(gap*65, "Space"),
-					new Beat(gap*65, "J"),
-					new Beat(gap*70, "S"),
-					new Beat(gap*72, "S"),
-					new Beat(gap*74, "S"),
-					new Beat(gap*78, "J"),
-					new Beat(gap*79, "K"),
-					new Beat(gap*80, "L"),
-					new Beat(gap*83, "Space"),
-					new Beat(gap*85, "S"),
-					new Beat(gap*87, "D"),
-					new Beat(gap*89, "S"),
-					new Beat(gap*91, "D"),
-					new Beat(gap*93, "F"),
-					new Beat(gap*96, "Space"),
-					new Beat(gap*98, "L"),
-					new Beat(gap*100, "Space"),
-					new Beat(gap*102, "S"),
-					new Beat(gap*104, "D"),
-					new Beat(gap*106, "Space"),
-					new Beat(gap*109, "Space"),
-					new Beat(gap*112, "Space"),
-					new Beat(gap*118, "S"),
-					new Beat(gap*119, "D"),
-					new Beat(gap*120, "F"),
-					new Beat(gap*123, "S"),
-					new Beat(gap*124, "D"),
-					new Beat(gap*125, "F"),
-					new Beat(gap*126, "J"),
-					new Beat(gap*127, "K"),
-					new Beat(gap*130, "J"),
-					new Beat(gap*133, "K"),
-					new Beat(gap*136, "L"),
-					new Beat(gap*138, "S"),
-					new Beat(gap*140, "Space"),
-					new Beat(gap*142, "S"),
-					new Beat(gap*144, "Space"),
-					new Beat(gap*146, "Space"),
-					new Beat(gap*150, "Space"),
-					new Beat(gap*152, "Space"),
-					new Beat(gap*157, "J"),
-					new Beat(gap*161, "K"),
-					new Beat(gap*165, "L"),
-					new Beat(gap*167, "S"),
-					new Beat(gap*169, "D"),
-					new Beat(gap*171, "F"),
-					new Beat(gap*174, "S"),
-					new Beat(gap*176, "D"),
-					new Beat(gap*178, "F"),
-					new Beat(gap*180, "Space"),
-					new Beat(gap*181, "L"),
-					new Beat(gap*184, "Space"),
-					new Beat(gap*187, "L"),
-					new Beat(gap*188, "K"),
-					new Beat(gap*189, "J"),
-					new Beat(gap*192, "S"),
-					new Beat(gap*192, "Space"),
-					new Beat(gap*196, "D"),
-					new Beat(gap*196, "Space"),
-					new Beat(gap*200, "S"),
-					new Beat(gap*200, "Space"),
-					new Beat(gap*207, "J"),
-					new Beat(gap*207, "Space"),
-					new Beat(gap*211, "K"),
-					new Beat(gap*211, "Space"),
-					new Beat(gap*216, "L"),
-					new Beat(gap*216, "Space"),
-					new Beat(gap*218, "Space"),
-					new Beat(gap*221, "J"),
-					new Beat(gap*223, "K"),
-					new Beat(gap*225, "L"),
-					new Beat(gap*227, "S"),
-					new Beat(gap*227, "Space"),
-					new Beat(gap*231, "D"),
-					new Beat(gap*231, "Space"),
-					new Beat(gap*235, "S"),
-					new Beat(gap*235, "Space"),
-					new Beat(gap*242, "S"),
-					new Beat(gap*242, "Space"),
-					new Beat(gap*242, "L"),
-					new Beat(gap*246, "D"),
-					new Beat(gap*246, "Space"),
-					new Beat(gap*246, "K"),
-					new Beat(gap*250, "F"),
-					new Beat(gap*250, "Space"),
-					new Beat(gap*250, "J"),
-					new Beat(gap*255, "J"),
-					new Beat(gap*257, "K"),
-					new Beat(gap*259, "K"),
-					new Beat(gap*262, "S"),
-					new Beat(gap*262, "Space"),
-					new Beat(gap*266, "D"),
-					new Beat(gap*266, "Space"),
-					new Beat(gap*270, "S"),
-					new Beat(gap*270, "Space"),
-					new Beat(gap*275, "J"),
-					new Beat(gap*277, "K"),
-					new Beat(gap*279, "L"),
-					new Beat(gap*282, "J"),
-					new Beat(gap*284, "K"),
-					new Beat(gap*286, "L"),
-					new Beat(gap*289, "J"),
-					new Beat(gap*291, "K"),
-					new Beat(gap*293, "L"),
-					new Beat(gap*295, "J"),
-					new Beat(gap*297, "F"),
-					new Beat(gap*299, "D"),
-					new Beat(gap*301, "S"),
-					new Beat(gap*304, "F"),
-					new Beat(gap*306, "D"),
-					new Beat(gap*308, "S"),
-					new Beat(gap*310, "F"),
-					new Beat(gap*312, "D"),
-					new Beat(gap*314, "S"),
-					new Beat(gap*317, "F"),
-					new Beat(gap*319, "D"),
-					new Beat(gap*321, "S"),
-					new Beat(gap*323, "F"),
-					new Beat(gap*325, "D"),
-					new Beat(gap*327, "S"),
-					new Beat(gap*330, "F"),
-					new Beat(gap*332, "S"),
-					new Beat(gap*332, "Space"),
-					new Beat(gap*336, "D"),
-					new Beat(gap*336, "Space"),
-					new Beat(gap*340, "S"),
-					new Beat(gap*340, "Space")					
-			};
-		}
-		// 곡별로 음표와 시간 설정 (like 악보 그리기) - 곡1-2) Hard
-		else if(titleName.equals("Joakim Karud - Mighty Love") && difficulty.equals("Hard")) {
-			int startTime = 1000 - Main.REACH_TIME*1000;
-			beats = new Beat[] {
-					new Beat(startTime, "Space"),
-			};
-		}
-		// 곡별로 음표와 시간 설정 (like 악보 그리기) - 곡2-1) Easy
-		else if(titleName.equals("Joakim Karud - Wild Flower") && difficulty.equals("Easy")) {
-			int startTime = 1000 - Main.REACH_TIME*1000;
-			beats = new Beat[] {
-					new Beat(startTime, "Space"),
-			};
-		}
-		// 곡별로 음표와 시간 설정 (like 악보 그리기) - 곡2-2) Hard
-		else if(titleName.equals("Joakim Karud - Wild Flower") && difficulty.equals("Hard")) {
-			int startTime = 1000 - Main.REACH_TIME*1000;
-			beats = new Beat[] {
-					new Beat(startTime, "Space"),
-			};
-		}
-		// 곡별로 음표와 시간 설정 (like 악보 그리기) - 곡3-1) Easy
-		else if(titleName.equals("Bensound - Energy") && difficulty.equals("Easy")) {
-			int startTime = 1000 - Main.REACH_TIME*1000;
-			beats = new Beat[] {
-					new Beat(startTime, "Space"),
-			};
-		}
-		// 곡별로 음표와 시간 설정 (like 악보 그리기) - 곡3-2) Hard
-		else if(titleName.equals("Bensound - Energy") && difficulty.equals("Hard")) {
-			int startTime = 1000 - Main.REACH_TIME*1000;
-			beats = new Beat[] {
-					new Beat(startTime, "Space"),
-			};
-		}
-		/*
-		 * Beat[] beats = { new Beat(1000, "S"), // 1초에 S 떨어지게 new Beat(2000, "D"), //
-		 * 2초에 D 떨어지게 new Beat(3000, "F"), // 3초에 F 떨어지게 };
-		 */
+	private void dropNotes() {
 		// note 생성
 		int i=0;
 		gameMusic.start();

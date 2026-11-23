@@ -1,6 +1,6 @@
 package dynamic_beat_16;
 
-public final class Score {
+public final class Grade {
 	public static final int PERFECT_POINTS = 40;
 	public static final int GREAT_POINTS = 30;
 
@@ -8,7 +8,7 @@ public final class Score {
 	public final int maxCombo;
 	public final String rank;
 
-	public Score(int total, int maxCombo, int noteCount) {
+	public Grade(int total, int maxCombo, int noteCount) {
 		this.total = total;
 		this.maxCombo = maxCombo;
 		this.rank = calculateRank(total, noteCount);

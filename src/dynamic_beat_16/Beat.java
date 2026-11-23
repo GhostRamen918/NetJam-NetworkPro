@@ -5,7 +5,6 @@ package dynamic_beat_16;
 public class Beat {
 	private int time;
 	private String noteName;
-	public static int START_TIME = 0;
 	
 	public int getTime() {
 		return time;
@@ -22,7 +21,7 @@ public class Beat {
 	
 	public Beat(int time, String noteName) {
 		super();
-		this.time = START_TIME + time;
+		this.time = time;
 		this.noteName = noteName;
 	}
 	
