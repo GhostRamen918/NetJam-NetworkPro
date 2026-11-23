@@ -1,16 +1,66 @@
 package dynamic_beat_16;
 
+import java.awt.event.KeyEvent;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
 public final class NoteCharts {
 
 	public enum Instrument {
-		DEFAULT,
+		DEFAULT(Direction.DOWN, 580, List.of(
+			new Lane("S", KeyEvent.VK_S, 228, 1, "drumSmall1.mp3"),
+			new Lane("D", KeyEvent.VK_D, 332, 1, "drumSmall1.mp3"),
+			new Lane("F", KeyEvent.VK_F, 436, 1, "drumSmall1.mp3"),
+			new Lane("Space", KeyEvent.VK_SPACE, 540, 2, "drumBig1.mp3"),
+			new Lane("J", KeyEvent.VK_J, 744, 1, "drumSmall1.mp3"),
+			new Lane("K", KeyEvent.VK_K, 848, 1, "drumSmall1.mp3"),
+			new Lane("L", KeyEvent.VK_L, 952, 1, "drumSmall1.mp3"))),
 		DRUM,
-		BASS,
+		BASS(Direction.UP, 100, List.of(
+			new Lane("D", KeyEvent.VK_D, 434, 1, null),
+			new Lane("F", KeyEvent.VK_F, 538, 1, null),
+			new Lane("J", KeyEvent.VK_J, 642, 1, null),
+			new Lane("K", KeyEvent.VK_K, 746, 1, null))),
 		KEYBOARD,
-		GUITAR
+		GUITAR;
+
+		final Direction direction;
+		final int judgementY;
+		final List<Lane> lanes;
+
+		Instrument() {
+			this(Direction.DOWN, 580, List.of());
+		}
+
+		Instrument(Direction direction, int judgementY, List<Lane> lanes) {
+			this.direction = direction;
+			this.judgementY = judgementY;
+			this.lanes = lanes;
+		}
+
+		Lane laneFor(String noteName) {
+			for (Lane lane : lanes) {
+				if (lane.noteName().equals(noteName)) {
+					return lane;
+				}
+			}
+			throw new IllegalArgumentException("Unsupported note for " + this + ": " + noteName);
+		}
+	}
+
+	enum Direction {
+		DOWN(1), UP(-1);
+
+		final int step;
+
+		Direction(int step) {
+			this.step = step;
+		}
+	}
+
+	record Lane(String noteName, int keyCode, int x, int widthInTiles, String soundFile) {
+		static final int TILE_WIDTH = 100;
 	}
 
 	private record ChartKey(String musicFile, String difficulty, Instrument instrument) {}
@@ -19,6 +69,7 @@ public final class NoteCharts {
 	private static final Map<ChartKey, Supplier<Beat[]>> CHARTS = Map.of(
 		new ChartKey("Bensound - Energy.mp3", "Easy", Instrument.DEFAULT), NoteCharts::singleNote,
 		new ChartKey("Bensound - Energy.mp3", "Hard", Instrument.DEFAULT), NoteCharts::singleNote,
+		new ChartKey("Bensound - Energy.mp3", "Easy", Instrument.BASS), NoteCharts::energyBassEasy,
 		new ChartKey("Joakim Karud - Wild Flower.mp3", "Easy", Instrument.DEFAULT), NoteCharts::singleNote,
 		new ChartKey("Joakim Karud - Wild Flower.mp3", "Hard", Instrument.DEFAULT), NoteCharts::singleNote,
 		new ChartKey("Joakim Karud - Mighty Love.mp3", "Easy", Instrument.DEFAULT), NoteCharts::mightyLoveEasy,
@@ -26,6 +77,10 @@ public final class NoteCharts {
 	);
 
 	private NoteCharts() {}
+
+	public static boolean hasChart(String musicFile, String difficulty, Instrument instrument) {
+		return CHARTS.containsKey(new ChartKey(musicFile, difficulty, instrument));
+	}
 
 	public static Beat[] getBeats(String musicFile, String difficulty, Instrument instrument) {
 		Supplier<Beat[]> chart = CHARTS.get(new ChartKey(musicFile, difficulty, instrument));
@@ -38,6 +93,28 @@ public final class NoteCharts {
 	private static Beat[] singleNote() {
 		int startTime = 1000 - Main.REACH_TIME * 1000;
 		return new Beat[] { new Beat(startTime, "Space") };
+	}
+
+	private static Beat[] energyBassEasy() {
+		int start = 3000 - Main.REACH_TIME * 1000;
+		int beat = 600;
+		return new Beat[] {
+			new Beat(start, "D"),
+			new Beat(start + beat, "F"),
+			new Beat(start + beat * 2, "J"),
+			new Beat(start + beat * 3, "K"),
+			new Beat(start + beat * 4, "K"),
+			new Beat(start + beat * 5, "J"),
+			new Beat(start + beat * 6, "F"),
+			new Beat(start + beat * 7, "D"),
+			new Beat(start + beat * 8, "D"),
+			new Beat(start + beat * 8, "J"),
+			new Beat(start + beat * 9, "F"),
+			new Beat(start + beat * 10, "K"),
+			new Beat(start + beat * 11, "F"),
+			new Beat(start + beat * 12, "D"),
+			new Beat(start + beat * 12, "K")
+		};
 	}
 
 	private static Beat[] mightyLoveEasy() {

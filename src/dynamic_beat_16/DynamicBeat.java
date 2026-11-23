@@ -10,6 +10,7 @@ import java.awt.Image;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 
 import javax.swing.ImageIcon;
@@ -17,7 +18,10 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 import javax.swing.Timer;
+
+import dynamic_beat_16.NoteCharts.Instrument;
 
 public class DynamicBeat extends JFrame {
 
@@ -59,14 +63,18 @@ public class DynamicBeat extends JFrame {
 	private JButton backButton = new JButton(backButtonBasicImage);
 	private final JButton singlePlayerButton = new JButton("싱글플레이");
 	private final JButton multiplayerButton = new JButton("멀티플레이");
+	private final InstrumentSelectionPanel instrumentPanel = new InstrumentSelectionPanel(this::chooseInstrument);
+	private final JLabel InstChartInfo = new JLabel("Bass");
+	private Instrument instrument = Instrument.DEFAULT;
 	private final MultiplayerPanel multiplayerPanel = new MultiplayerPanel(this::enterMain);
 	
 	private int mouseX, mouseY;
 
 	private GameState state = GameState.INTRO;
 	private static final long RESULT_FADE_NANOS = 1_500_000_000L;
+	private static final int RESULT_FADE_FRAME_MILLIS = 16;
 	private Game completedGame;
-	private long fadeStartedAt;
+	private Thread fadeThread;
 	private int fadeOpacity;
 
 	ArrayList<Track> trackList = new ArrayList<Track>();
@@ -239,6 +247,10 @@ public class DynamicBeat extends JFrame {
 		multiplayerPanel.setBounds(0, 30, Main.SCREEN_WIDTH, Main.SCREEN_HEIGHT - 30);
 		multiplayerPanel.setVisible(false);
 		add(multiplayerPanel);
+
+		instrumentPanel.setBounds(430, 35, 420, 60);
+		instrumentPanel.setVisible(false);
+		add(instrumentPanel);
 
 		// leftButton
 		leftButton.setVisible(false);
@@ -443,16 +455,44 @@ public class DynamicBeat extends JFrame {
 		if (state == GameState.PLAYING && game.hasFinishedNotes()) {
 			completedGame = game;
 			game = null;
-			fadeStartedAt = System.nanoTime();
+			fadeOpacity = 0;
 			state = GameState.FADING_OUT;
-		} else if (state == GameState.FADING_OUT) {
-			if (fadeOpacity == 255) {
-				completedGame.close();
-				state = GameState.RESULT;
-				return;
-			}
-			long elapsed = System.nanoTime() - fadeStartedAt;
-			fadeOpacity = (int) Math.min(255, elapsed * 255 / RESULT_FADE_NANOS);
+			fadeThread = new Thread(this::runResultFade, "result-fade");
+			fadeThread.setDaemon(true);
+			fadeThread.start();
+		}
+	}
+
+	private void runResultFade() {
+		Thread worker = Thread.currentThread();
+		long startedAt = System.nanoTime();
+		try {
+			int opacity;
+			do {
+				long elapsed = System.nanoTime() - startedAt;
+				opacity = (int) Math.min(255, elapsed * 255 / RESULT_FADE_NANOS);
+				int frameOpacity = opacity;
+				SwingUtilities.invokeAndWait(() -> {
+					if (fadeThread == worker) {
+						fadeOpacity = frameOpacity;
+						screenPanel.repaint();
+					}
+				});
+				Thread.sleep(RESULT_FADE_FRAME_MILLIS);
+			} while (opacity < 255);
+
+			SwingUtilities.invokeLater(() -> {
+				if (fadeThread == worker) {
+					fadeThread = null;
+					completedGame.close();
+					state = GameState.RESULT;
+					screenPanel.repaint();
+				}
+			});
+		} catch (InterruptedException e) {
+			worker.interrupt();
+		} catch (InvocationTargetException e) {
+			throw new IllegalStateException("Could not update the result fade", e.getCause());
 		}
 	}
 
@@ -466,6 +506,15 @@ public class DynamicBeat extends JFrame {
 				.getImage();
 		selectedMusic = new Music(trackList.get(nowSelected).getStartMusic(),true);
 		selectedMusic.start();
+		updateDifficultyButtons(nowSelected);
+	}
+
+	private void updateDifficultyButtons(int trackIndex) {
+		String musicFile = trackList.get(trackIndex).getGameMusic();
+		boolean hasEasy = NoteCharts.hasChart(musicFile, "Easy", instrument);
+		boolean hasHard = NoteCharts.hasChart(musicFile, "Hard", instrument);
+		easyButton.setEnabled(hasEasy);
+		hardButton.setEnabled(hasHard);
 	}
 	
 	// <leftButton 이벤트 처리 함수>
@@ -492,15 +541,19 @@ public class DynamicBeat extends JFrame {
 
 	// <게임시작 함수> 
 	public void gameStart(int nowSelected, String difficulty) {
+		Track track = trackList.get(nowSelected);
+		if (!NoteCharts.hasChart(track.getGameMusic(), difficulty, instrument)) {
+			return;
+		}
 		if(selectedMusic != null) // 이미 어떤 음악이 실행중이라면 그 음악 중지시킴 
 			selectedMusic.close();
 		selectedMusic = null;
 		setTrackButtonsVisible(false);
 		// 게임화면으로 넘어갔으니 배경 이미지 바꿔줌
-		background = new ImageIcon(Main.class.getResource("images/"+trackList.get(nowSelected).getGameImage())).getImage();
+		background = new ImageIcon(Main.class.getResource("images/" + track.getGameImage())).getImage();
 		backButton.setVisible(true);
 		state = GameState.PLAYING;
-		game = new Game(trackList.get(nowSelected).getTitleName(), difficulty, trackList.get(nowSelected).getGameMusic());
+		game = new Game(track.getTitleName(), difficulty, track.getGameMusic(), instrument);
 		game.start(); // Game.java의 run함수가 실행됨 
 		setFocusable(true); //게임창 (메인 프레임)에 키보드 포커스가 맞춰져 있도록 
 		requestFocusInWindow();
@@ -519,6 +572,8 @@ public class DynamicBeat extends JFrame {
 			game.close();
 			game = null;
 		} else if (state == GameState.FADING_OUT) {
+			fadeThread.interrupt();
+			fadeThread = null;
 			completedGame.close();
 		}
 		completedGame = null;
@@ -551,6 +606,11 @@ public class DynamicBeat extends JFrame {
 		multiplayerPanel.setVisible(true);
 	}
 
+	private void chooseInstrument(Instrument selectedInstrument) {
+		instrument = selectedInstrument;
+		updateDifficultyButtons(nowSelected);
+	}
+
 	private void enterTrackSelection() {
 		state = GameState.SELECT;
 		singlePlayerButton.setVisible(false);
@@ -562,10 +622,12 @@ public class DynamicBeat extends JFrame {
 	}
 
 	private void setTrackButtonsVisible(boolean visible) {
+		instrumentPanel.setVisible(visible);
 		leftButton.setVisible(visible);
 		rightButton.setVisible(visible);
 		easyButton.setVisible(visible);
 		hardButton.setVisible(visible);
+		InstChartInfo.setVisible(visible && instrument == Instrument.BASS);
 	}
 
 }

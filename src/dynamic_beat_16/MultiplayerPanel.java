@@ -28,7 +28,7 @@ final class MultiplayerPanel extends JPanel {
 	private static final Color TEXT = new Color(19, 32, 53);
 	private static final Color MUTED = new Color(74, 94, 120);
 	private static final Color BORDER = new Color(207, 220, 233);
-	private static final Color LOCAL_PLAYER_BACKGROUND = new Color(226, 243, 248);
+	private static final Color LOCAL_PLAYER_BACKGROUND = Color.white;
 	private static final Color TEAL = new Color(0, 107, 124);
 	private static final Room[] PREVIEW_ROOMS = {
 		new Room("024", "예시용", 2, 6)
@@ -39,7 +39,7 @@ final class MultiplayerPanel extends JPanel {
 	private final CardLayout cards = new CardLayout();
 	private final JTextField roomNameField = new JTextField(25);
 	private final JSpinner capacityField = new JSpinner(new SpinnerNumberModel(6, 2, 6, 1));
-	private final JLabel roomNameError = label(" ", 14, Font.PLAIN, new Color(157, 43, 49));
+	private final JLabel roomNameError = label(" ", 14, Font.PLAIN, Color.red);
 	private final JPanel lobbyPage = page();
 
 	MultiplayerPanel(Runnable leaveMultiplayer) {
@@ -240,8 +240,8 @@ final class MultiplayerPanel extends JPanel {
 	private static JPanel header(String title, JComponent action) {
 		JPanel header = new JPanel(new BorderLayout(12, 0));
 		header.setOpaque(false);
-		header.add(label(title, 22, Font.BOLD, TEXT), BorderLayout.WEST);
-		header.add(action, BorderLayout.EAST);
+		header.add(label(title, 22, Font.BOLD, TEXT), BorderLayout.EAST);
+		header.add(action, BorderLayout.WEST);
 		return header;
 	}
 

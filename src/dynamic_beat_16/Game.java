@@ -6,9 +6,12 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
-import java.util.ArrayList;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.swing.ImageIcon;
+
+import dynamic_beat_16.NoteCharts.Instrument;
+import dynamic_beat_16.NoteCharts.Lane;
 
 public class Game extends Thread {
 	// Thread : 하나의 프로그램 안에서 실행되는 작은 프로그램.
@@ -18,27 +21,15 @@ public class Game extends Thread {
 	// 3. 게임정보 및 4. 판정선 이미지
 	private Image judgementLineImage = new ImageIcon(Main.class.getResource("images/judgementLine.png")).getImage();
 	private Image gameInfoImage = new ImageIcon(Main.class.getResource("images/gameInfo.png")).getImage();
-	// 1. note 경로 이미지 
-	private Image noteRouteSImage = new ImageIcon(Main.class.getResource("images/noteRoute.png")).getImage();
-	private Image noteRouteDImage = new ImageIcon(Main.class.getResource("images/noteRoute.png")).getImage();
-	private Image noteRouteFImage = new ImageIcon(Main.class.getResource("images/noteRoute.png")).getImage();
-	private Image noteRouteSpace1Image = new ImageIcon(Main.class.getResource("images/noteRoute.png")).getImage();
-	private Image noteRouteSpace2Image = new ImageIcon(Main.class.getResource("images/noteRoute.png")).getImage();
-	private Image noteRouteJImage = new ImageIcon(Main.class.getResource("images/noteRoute.png")).getImage();
-	private Image noteRouteKImage = new ImageIcon(Main.class.getResource("images/noteRoute.png")).getImage();
-	private Image noteRouteLImage = new ImageIcon(Main.class.getResource("images/noteRoute.png")).getImage();
+	private final Image noteRouteImage = new ImageIcon(Main.class.getResource("images/noteRoute.png")).getImage();
+	private final Image noteRoutePressedImage = new ImageIcon(Main.class.getResource("images/noteRoutePressed.png")).getImage();
+	private final Image keyPadImage = new ImageIcon(Main.class.getResource("images/keyPadBasic.png")).getImage();
+	private final Image keyPadPressedImage = new ImageIcon(Main.class.getResource("images/keyPadPressed.png")).getImage();
+	private final Instrument instrument;
+	private final boolean[] pressedLanes;
 	// 8. 판정 이미지 - 판정 결과(Miss, Late, Good, Great, Perfect, Early) 및 판정결과 아래의 노란 불꽃 이미지 
 	private Image yellowFlareImage;
 	private Image judgeImage;
-	// 9. 각 키별 키패드 눌렀을 때(빨간색으로), 뗐을 때 이미지 변경 (원래대로)
-	private Image keyPadSImage = new ImageIcon(Main.class.getResource("images/keyPadBasic.png")).getImage();
-	private Image keyPadDImage = new ImageIcon(Main.class.getResource("images/keyPadBasic.png")).getImage();
-	private Image keyPadFImage = new ImageIcon(Main.class.getResource("images/keyPadBasic.png")).getImage();
-	private Image keyPadSpace1Image = new ImageIcon(Main.class.getResource("images/keyPadBasic.png")).getImage();
-	private Image keyPadSpace2Image = new ImageIcon(Main.class.getResource("images/keyPadBasic.png")).getImage();
-	private Image keyPadJImage = new ImageIcon(Main.class.getResource("images/keyPadBasic.png")).getImage();
-	private Image keyPadKImage = new ImageIcon(Main.class.getResource("images/keyPadBasic.png")).getImage();
-	private Image keyPadLImage = new ImageIcon(Main.class.getResource("images/keyPadBasic.png")).getImage();
 	// 7. 곡정보 - 1) 곡 제목 , 3) 난이도 
 	private String titleName;
 	private String difficulty;
@@ -52,8 +43,8 @@ public class Game extends Thread {
 	private int combo=0;
 	private int maxCombo=0;
 	
-	ArrayList<Note> noteList = new ArrayList<Note>();
-	private boolean allNotesSpawned;
+	final ConcurrentLinkedQueue<Note> noteList = new ConcurrentLinkedQueue<>();
+	private volatile boolean allNotesSpawned;
 
 	public boolean hasFinishedNotes() {
 		return allNotesSpawned && noteList.isEmpty();
@@ -80,57 +71,41 @@ public class Game extends Thread {
 	
 	// <생성자> - 초기화 
 	public Game(String titleName, String difficulty, String musicTitle) {
-		this(titleName, difficulty, musicTitle, NoteCharts.Instrument.DEFAULT);
+		this(titleName, difficulty, musicTitle, Instrument.DEFAULT);
 	}
 
-	public Game(String titleName, String difficulty, String musicTitle, NoteCharts.Instrument instrument) {
+	public Game(String titleName, String difficulty, String musicTitle, Instrument instrument) {
 		this.titleName = titleName;
 		this.difficulty = difficulty;
 		this.beats = NoteCharts.getBeats(musicTitle, difficulty, instrument);
+		this.instrument = instrument;
+		this.pressedLanes = new boolean[instrument.lanes.size()];
 		gameMusic = new Music(musicTitle, false);
 	}
 	
 	// 게임 화면에서 그려줘야 하는 요소들 
 	public void screenDraw(Graphics2D g) {
-		// 1. note 경로 이미지
-		g.drawImage(noteRouteSImage, 228, 30, null);
-		g.drawImage(noteRouteDImage, 332, 30, null);
-		g.drawImage(noteRouteFImage, 436, 30, null);
-		g.drawImage(noteRouteSpace1Image, 540, 30, null);
-		g.drawImage(noteRouteSpace2Image, 640, 30, null);
-		g.drawImage(noteRouteJImage, 744, 30, null);
-		g.drawImage(noteRouteKImage, 848, 30, null);
-		g.drawImage(noteRouteLImage, 952, 30, null);
-		// 2. note 경로 구분선 이미지 
-		g.drawImage(noteRouteLineImage, 224, 30, null);
-		g.drawImage(noteRouteLineImage, 328, 30, null);
-		g.drawImage(noteRouteLineImage, 432, 30, null);
-		g.drawImage(noteRouteLineImage, 536, 30, null);
-		g.drawImage(noteRouteLineImage, 740, 30, null);
-		g.drawImage(noteRouteLineImage, 844, 30, null);
-		g.drawImage(noteRouteLineImage, 948, 30, null);
-		g.drawImage(noteRouteLineImage, 1052, 30, null);
+		drawLanes(g);
 		// 3. 게임정보 및  4. 판정선 이미지
 		g.drawImage(gameInfoImage, 0, 660, null); // 게임 정보 이미지 - 가수, 곡명, 점수 등이 나오는 반투명 검정색 영역
-		g.drawImage(judgementLineImage, 0, 580, null); // 판정선(빨간색 위아래 두 줄) 이미지
+		g.drawImage(judgementLineImage, 0, instrument.judgementY, null); // 판정선(빨간색 위아래 두 줄) 이미지
 		// 5. note 이미지 - noteList(ArrayList)
-		for(int i=0; i<noteList.size(); i++){  
-			Note note = noteList.get(i);
-			// Note.java에서 close가 이루어진 note는  더 이상 그려줄 필요가 없음
-			// ==> note가 작동하고 있는 상태가 아니라면 noteList에서 지우고 i--해준다. 
-			if(note.getY()>620) {
+		Graphics2D noteGraphics = (Graphics2D) g.create();
+		noteGraphics.clipRect(0, 30, Main.SCREEN_WIDTH, 630);
+		for (Note note : noteList) {
+			if(note.hasMissed()) {
 				judgeImage = new ImageIcon(Main.class.getResource("images/judgeMiss.png")).getImage();
 			}
 			if(!note.isProceeded()) {
-				noteList.remove(i);
-				i--;
+				noteList.remove(note);
 			}
 			else {
-				note.screenDraw(g);
+				note.screenDraw(noteGraphics);
 			}
 			// 노트들을 그려준다    
 			// 나중에 그릴수록 레이어가 더 위에 올라옴 ==> 판정라인보다 노트가 더 위에 있어야 하니까 노트를 더 뒤에서 그려줌 
 		}
+		noteGraphics.dispose();
 		g.setColor(Color.white);
 		// Antialiasing - 글자 안 깨지게.
 		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
@@ -148,111 +123,62 @@ public class Game extends Thread {
 		g.setColor(Color.YELLOW);
 		g.setFont(new Font("Arial", Font.BOLD, 30));
 		g.drawString(Integer.toString(combo), 1140, 350);
-		// 6. 각각의 note가 키보드에서 어떤 키인지 알려주는 문구  
-		g.setFont(new Font("Arial", Font.PLAIN, 26));
-		g.setColor(Color.DARK_GRAY);
-		g.drawString("S", 270, 609);
-		g.drawString("D", 374, 609);
-		g.drawString("F", 478, 609);
-		g.drawString("Space Bar", 580, 609);
-		g.drawString("J", 784, 609);
-		g.drawString("K", 889, 609);
-		g.drawString("L", 993, 609);
 		// 8. 판정 이미지 - 판정 결과(Miss, Late, Good, Great, Perfect, Early) 및 판정결과 아래의 노란 불꽃 이미지 
 		g.drawImage(yellowFlareImage, 335, 330, null);
 		g.drawImage(judgeImage, 460, 420, null);
-		// 9. 각 키별 영역
-		g.drawImage(keyPadSImage, 228, 580, null);
-		g.drawImage(keyPadDImage, 332, 580, null);
-		g.drawImage(keyPadFImage, 436, 580, null);
-		g.drawImage(keyPadSpace1Image, 540, 580, null);
-		g.drawImage(keyPadSpace2Image, 640, 580, null);
-		g.drawImage(keyPadJImage, 744, 580, null);
-		g.drawImage(keyPadKImage, 848, 580, null);
-		g.drawImage(keyPadLImage, 952, 580, null);
-	}
-	
-	public void pressS() { // S 키 눌렀을 때의 처리
-		judge("S");
-		noteRouteSImage = new ImageIcon(Main.class.getResource("images/noteRoutePressed.png")).getImage();
-		keyPadSImage = new ImageIcon(Main.class.getResource("images/keyPadPressed.png")).getImage();
-		// 효과음 삽입 
-		new Music("drumSmall1.mp3",false).start();
-	}
-	public void releaseS() { // S 키 뗐을 때의 처리 
-		noteRouteSImage = new ImageIcon(Main.class.getResource("images/noteRoute.png")).getImage();
-		keyPadSImage = new ImageIcon(Main.class.getResource("images/keyPadBasic.png")).getImage();
-	}
-	
-	public void pressD() { 
-		judge("D");
-		noteRouteDImage = new ImageIcon(Main.class.getResource("images/noteRoutePressed.png")).getImage();
-		keyPadDImage = new ImageIcon(Main.class.getResource("images/keyPadPressed.png")).getImage();
-		new Music("drumSmall1.mp3",false).start();
-	}
-	public void releaseD() { 
-		noteRouteDImage = new ImageIcon(Main.class.getResource("images/noteRoute.png")).getImage();
-		keyPadDImage = new ImageIcon(Main.class.getResource("images/keyPadBasic.png")).getImage();
-	}
-	
-	public void pressF() { 
-		judge("F");
-		noteRouteFImage = new ImageIcon(Main.class.getResource("images/noteRoutePressed.png")).getImage();
-		keyPadFImage = new ImageIcon(Main.class.getResource("images/keyPadPressed.png")).getImage();
-		new Music("drumSmall1.mp3",false).start();
-	}
-	public void releaseF() {  
-		noteRouteFImage = new ImageIcon(Main.class.getResource("images/noteRoute.png")).getImage();
-		keyPadFImage = new ImageIcon(Main.class.getResource("images/keyPadBasic.png")).getImage();
-	}
-	
-	public void pressSpace() { 
-		judge("Space");
-		noteRouteSpace1Image = new ImageIcon(Main.class.getResource("images/noteRoutePressed.png")).getImage();
-		keyPadSpace1Image = new ImageIcon(Main.class.getResource("images/keyPadPressed.png")).getImage();
-		noteRouteSpace2Image = new ImageIcon(Main.class.getResource("images/noteRoutePressed.png")).getImage();
-		keyPadSpace2Image = new ImageIcon(Main.class.getResource("images/keyPadPressed.png")).getImage();
-		new Music("drumBig1.mp3",false).start();
-	}
-	public void releaseSpace() { 
-		noteRouteSpace1Image = new ImageIcon(Main.class.getResource("images/noteRoute.png")).getImage();
-		keyPadSpace1Image = new ImageIcon(Main.class.getResource("images/keyPadBasic.png")).getImage();
-		noteRouteSpace2Image = new ImageIcon(Main.class.getResource("images/noteRoute.png")).getImage();
-		keyPadSpace2Image = new ImageIcon(Main.class.getResource("images/keyPadBasic.png")).getImage();
-	}
-	public void pressJ() { 
-		judge("J");
-		noteRouteJImage = new ImageIcon(Main.class.getResource("images/noteRoutePressed.png")).getImage();
-		keyPadJImage = new ImageIcon(Main.class.getResource("images/keyPadPressed.png")).getImage();
-		new Music("drumSmall1.mp3",false).start();
-	}
-	public void releaseJ() { 
-		noteRouteJImage = new ImageIcon(Main.class.getResource("images/noteRoute.png")).getImage();
-		keyPadJImage = new ImageIcon(Main.class.getResource("images/keyPadBasic.png")).getImage();
+		drawKeyPads(g);
 	}
 
-	public void pressK() { 
-		judge("K");
-		noteRouteKImage = new ImageIcon(Main.class.getResource("images/noteRoutePressed.png")).getImage();
-		keyPadKImage = new ImageIcon(Main.class.getResource("images/keyPadPressed.png")).getImage();
-		new Music("drumSmall1.mp3",false).start();
+	private void drawLanes(Graphics2D g) {
+		for (int i = 0; i < instrument.lanes.size(); i++) {
+			Lane lane = instrument.lanes.get(i);
+			Image route = pressedLanes[i] ? noteRoutePressedImage : noteRouteImage;
+			for (int tile = 0; tile < lane.widthInTiles(); tile++) {
+				g.drawImage(route, lane.x() + tile * Lane.TILE_WIDTH, 30, null);
+			}
+			g.drawImage(noteRouteLineImage, lane.x() - 4, 30, null);
+		}
+		Lane last = instrument.lanes.get(instrument.lanes.size() - 1);
+		g.drawImage(noteRouteLineImage, last.x() + last.widthInTiles() * Lane.TILE_WIDTH, 30, null);
 	}
-	public void releaseK() { 
-		noteRouteKImage = new ImageIcon(Main.class.getResource("images/noteRoute.png")).getImage();
-		keyPadKImage = new ImageIcon(Main.class.getResource("images/keyPadBasic.png")).getImage();
+
+	private void drawKeyPads(Graphics2D g) {
+		g.setFont(new Font("Arial", Font.PLAIN, 26));
+		g.setColor(Color.DARK_GRAY);
+		for (int i = 0; i < instrument.lanes.size(); i++) {
+			Lane lane = instrument.lanes.get(i);
+			String label = lane.noteName().equals("Space") ? "Space Bar" : lane.noteName();
+			int centerX = lane.x() + lane.widthInTiles() * Lane.TILE_WIDTH / 2;
+			g.drawString(label, centerX - g.getFontMetrics().stringWidth(label) / 2, instrument.judgementY + 29);
+			Image pad = pressedLanes[i] ? keyPadPressedImage : keyPadImage;
+			for (int tile = 0; tile < lane.widthInTiles(); tile++) {
+				g.drawImage(pad, lane.x() + tile * Lane.TILE_WIDTH, instrument.judgementY, null);
+			}
+		}
 	}
-	
-	public void pressL() {  
-		judge("L");
-		noteRouteLImage = new ImageIcon(Main.class.getResource("images/noteRoutePressed.png")).getImage();
-		keyPadLImage = new ImageIcon(Main.class.getResource("images/keyPadPressed.png")).getImage();
-		new Music("drumSmall1.mp3",false).start();
+
+	public void keyPressed(int keyCode) {
+		for (int i = 0; i < instrument.lanes.size(); i++) {
+			Lane lane = instrument.lanes.get(i);
+			if (lane.keyCode() == keyCode) {
+				pressedLanes[i] = true;
+				judge(lane.noteName());
+				if (lane.soundFile() != null) {
+					new Music(lane.soundFile(), false).start();
+				}
+				return;
+			}
+		}
 	}
-	public void releaseL() { 
-		noteRouteLImage = new ImageIcon(Main.class.getResource("images/noteRoute.png")).getImage();
-		keyPadLImage = new ImageIcon(Main.class.getResource("images/keyPadBasic.png")).getImage();
+
+	public void keyReleased(int keyCode) {
+		for (int i = 0; i < instrument.lanes.size(); i++) {
+			if (instrument.lanes.get(i).keyCode() == keyCode) {
+				pressedLanes[i] = false;
+				return;
+			}
+		}
 	}
-	
 	// <run 함수> Game 클래스에서 만든 instance 변수는 run 메소드 안에 있는 내용을 실행한다. 
 	@Override
 	public void run() {
@@ -273,7 +199,7 @@ public class Game extends Thread {
 		while(i < beats.length && !isInterrupted()) {
 			boolean dropped = false;
 			if(beats[i].getTime() <= gameMusic.getTime()) { // 비트가 떨어지는 시간대가 gameMusic의 시간보다 작다면 (곡이 진행되고 있다면)  
-				Note note = new Note(beats[i].getNoteName());  // 노트 만든다
+				Note note = new Note(beats[i].getNoteName(), instrument);  // 노트 만든다
 				note.start();
 				noteList.add(note);
 				i++;
@@ -293,13 +219,12 @@ public class Game extends Thread {
 	
 	//<판정 함수> - 유저가 입력한 키가 실제 note의 키와 동일하면 Note.java의 judge함수에서 값을 받아서 judgeEvent 함수에 넘긴다. 
 	public void judge(String input) {
-		for(int i=0; i<noteList.size(); i++) {
-			Note note = noteList.get(i);
-			if(input.equals(note.getNoteType())) {
+		for (Note note : noteList) {
+			if(note.isProceeded() && input.equals(note.getNoteType())) {
 				String result = note.judge();
 				judgeEvent(result);
 				comboEvent(result);
-				scoreEvent(note.score());
+				scoreEvent(Grade.pointsFor(result));
 				break;
 			}
 		}
