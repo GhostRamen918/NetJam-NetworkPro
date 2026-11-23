@@ -139,13 +139,13 @@ public class Game extends Thread {
 		for (int i = 0; i < instrument.lanes.size(); i++) {
 			Lane lane = instrument.lanes.get(i);
 			Image route = pressedLanes[i] ? noteRoutePressedImage : noteRouteImage;
-			for (int tile = 0; tile < lane.widthInTiles(); tile++) {
-				g.drawImage(route, lane.x() + tile * Lane.TILE_WIDTH, 30, null);
+			for (int tile = 0; tile < lane.widthInTiles; tile++) {
+				g.drawImage(route, lane.x + tile * Lane.TILE_WIDTH, 30, null);
 			}
-			g.drawImage(noteRouteLineImage, lane.x() - 4, 30, null);
+			g.drawImage(noteRouteLineImage, lane.x - 4, 30, null);
 		}
 		Lane last = instrument.lanes.get(instrument.lanes.size() - 1);
-		g.drawImage(noteRouteLineImage, last.x() + last.widthInTiles() * Lane.TILE_WIDTH, 30, null);
+		g.drawImage(noteRouteLineImage, last.x + last.widthInTiles * Lane.TILE_WIDTH, 30, null);
 	}
 
 	private void drawKeyPads(Graphics2D g) {
@@ -153,12 +153,12 @@ public class Game extends Thread {
 		g.setColor(Color.DARK_GRAY);
 		for (int i = 0; i < instrument.lanes.size(); i++) {
 			Lane lane = instrument.lanes.get(i);
-			String label = lane.noteName().equals("Space") ? "Space Bar" : lane.noteName();
-			int centerX = lane.x() + lane.widthInTiles() * Lane.TILE_WIDTH / 2;
+			String label = lane.noteName.equals("Space") ? "Space Bar" : lane.noteName;
+			int centerX = lane.x + lane.widthInTiles * Lane.TILE_WIDTH / 2;
 			g.drawString(label, centerX - g.getFontMetrics().stringWidth(label) / 2, instrument.judgementY + 29);
 			Image pad = pressedLanes[i] ? keyPadPressedImage : keyPadImage;
-			for (int tile = 0; tile < lane.widthInTiles(); tile++) {
-				g.drawImage(pad, lane.x() + tile * Lane.TILE_WIDTH, instrument.judgementY, null);
+			for (int tile = 0; tile < lane.widthInTiles; tile++) {
+				g.drawImage(pad, lane.x + tile * Lane.TILE_WIDTH, instrument.judgementY, null);
 			}
 		}
 	}
@@ -166,11 +166,11 @@ public class Game extends Thread {
 	public void keyPressed(int keyCode) {
 		for (int i = 0; i < instrument.lanes.size(); i++) {
 			Lane lane = instrument.lanes.get(i);
-			if (lane.keyCode() == keyCode) {
+			if (lane.keyCode == keyCode) {
 				pressedLanes[i] = true;
-				judge(lane.noteName());
-				if (lane.soundFile() != null) {
-					new Music(lane.soundFile(), false).start();
+				judge(lane.noteName);
+				if (lane.soundFile != null) {
+					new Music(lane.soundFile, false).start();
 				}
 				return;
 			}
@@ -179,7 +179,7 @@ public class Game extends Thread {
 
 	public void keyReleased(int keyCode) {
 		for (int i = 0; i < instrument.lanes.size(); i++) {
-			if (instrument.lanes.get(i).keyCode() == keyCode) {
+			if (instrument.lanes.get(i).keyCode == keyCode) {
 				pressedLanes[i] = false;
 				return;
 			}

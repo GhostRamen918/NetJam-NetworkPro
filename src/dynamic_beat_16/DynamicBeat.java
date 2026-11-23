@@ -10,7 +10,6 @@ import java.awt.Image;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 
 import javax.swing.ImageIcon;
@@ -18,7 +17,6 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
 import dynamic_beat_16.NoteCharts.Instrument;
@@ -63,18 +61,16 @@ public class DynamicBeat extends JFrame {
 	private JButton backButton = new JButton(backButtonBasicImage);
 	private final JButton singlePlayerButton = new JButton("싱글플레이");
 	private final JButton multiplayerButton = new JButton("멀티플레이");
-	private final InstrumentSelectionPanel instrumentPanel = new InstrumentSelectionPanel(this::chooseInstrument);
+	private final InstSelectPanel instrumentPanel = new InstSelectPanel(() -> refreshInstrumentSelect());
 	private final JLabel instrumentChartInfoLabel = new JLabel("Bass");
-	private Instrument instrument = Instrument.DEFAULT;
-	private final MultiplayerPanel multiplayerPanel = new MultiplayerPanel(this::enterMain);
+	private final MultiplayerPanel multiplayerPanel = new MultiplayerPanel(() -> enterMain());
 	
 	private int mouseX, mouseY;
 
 	private GameState state = GameState.INTRO;
 	private static final long RESULT_FADE_NANOS = 1_500_000_000L;
-	private static final int RESULT_FADE_FRAME_MILLIS = 16;
 	private Game completedGame;
-	private Thread fadeThread;
+	private long fadeStartedAt;
 	private int fadeOpacity;
 
 	ArrayList<Track> trackList = new ArrayList<Track>();
@@ -427,8 +423,8 @@ public class DynamicBeat extends JFrame {
 		});
 		add(menuBarLabel);
 
-		new Timer(10, e -> {
-			updateGameEnd();
+		new Timer(Main.SLEEP_TIME, e -> {
+			updateGameScreen();
 			screenPanel.repaint();
 		}).start();
 		setVisible(true); // 모든 설정이 끝난 뒤 마지막에 창 띄우기
@@ -451,48 +447,24 @@ public class DynamicBeat extends JFrame {
 		// 버튼은 패널이 알아서 그리고, 반복해서 다시 그리는 건 Timer가 담당
 	}
 	
-	private void updateGameEnd() {
-		if (state == GameState.PLAYING && game.hasFinishedNotes()) {
-			completedGame = game;
-			game = null;
-			fadeOpacity = 0;
-			state = GameState.FADING_OUT;
-			fadeThread = new Thread(this::runResultFade, "result-fade");
-			fadeThread.setDaemon(true);
-			fadeThread.start();
-		}
-	}
-
-	private void runResultFade() {
-		Thread worker = Thread.currentThread();
-		long startedAt = System.nanoTime();
-		try {
-			int opacity;
-			do {
-				long elapsed = System.nanoTime() - startedAt;
-				opacity = (int) Math.min(255, elapsed * 255 / RESULT_FADE_NANOS);
-				int frameOpacity = opacity;
-				SwingUtilities.invokeAndWait(() -> {
-					if (fadeThread == worker) {
-						fadeOpacity = frameOpacity;
-						screenPanel.repaint();
-					}
-				});
-				Thread.sleep(RESULT_FADE_FRAME_MILLIS);
-			} while (opacity < 255);
-
-			SwingUtilities.invokeLater(() -> {
-				if (fadeThread == worker) {
-					fadeThread = null;
-					completedGame.close();
-					state = GameState.RESULT;
-					screenPanel.repaint();
-				}
-			});
-		} catch (InterruptedException e) {
-			worker.interrupt();
-		} catch (InvocationTargetException e) {
-			throw new IllegalStateException("Could not update the result fade", e.getCause());
+	private void updateGameScreen() {
+		if (state == GameState.PLAYING) {
+			//game.update();
+			if (game.hasFinishedNotes()) {
+				completedGame = game;
+				game = null;
+				fadeOpacity = 0;
+				fadeStartedAt = System.nanoTime();
+				state = GameState.FADING_OUT;
+			}
+		} else if (state == GameState.FADING_OUT) {
+			if (fadeOpacity == 255) {
+				completedGame.close();
+				state = GameState.RESULT;
+			} else {
+				long elapsed = System.nanoTime() - fadeStartedAt;
+				fadeOpacity = (int) Math.min(255, elapsed * 255 / RESULT_FADE_NANOS);
+			}
 		}
 	}
 
@@ -511,6 +483,7 @@ public class DynamicBeat extends JFrame {
 
 	private void updateDifficultyButtons(int trackIndex) {
 		String musicFile = trackList.get(trackIndex).getGameMusic();
+		Instrument instrument = instrumentPanel.getSelectedInstrument();
 		boolean hasEasy = NoteCharts.hasChart(musicFile, "Easy", instrument);
 		boolean hasHard = NoteCharts.hasChart(musicFile, "Hard", instrument);
 		easyButton.setEnabled(hasEasy);
@@ -542,6 +515,7 @@ public class DynamicBeat extends JFrame {
 	// <게임시작 함수> 
 	public void gameStart(int nowSelected, String difficulty) {
 		Track track = trackList.get(nowSelected);
+		Instrument instrument = instrumentPanel.getSelectedInstrument();
 		if (!NoteCharts.hasChart(track.getGameMusic(), difficulty, instrument)) {
 			return;
 		}
@@ -554,7 +528,7 @@ public class DynamicBeat extends JFrame {
 		backButton.setVisible(true);
 		state = GameState.PLAYING;
 		game = new Game(track.getTitleName(), difficulty, track.getGameMusic(), instrument);
-		game.start(); // Game.java의 run함수가 실행됨 
+		game.start();
 		setFocusable(true); //게임창 (메인 프레임)에 키보드 포커스가 맞춰져 있도록 
 		requestFocusInWindow();
 		// 화면이 바뀜에 따라 focus가 맞지 않을 수도 있음.
@@ -572,8 +546,6 @@ public class DynamicBeat extends JFrame {
 			game.close();
 			game = null;
 		} else if (state == GameState.FADING_OUT) {
-			fadeThread.interrupt();
-			fadeThread = null;
 			completedGame.close();
 		}
 		completedGame = null;
@@ -606,8 +578,7 @@ public class DynamicBeat extends JFrame {
 		multiplayerPanel.setVisible(true);
 	}
 
-	private void chooseInstrument(Instrument selectedInstrument) {
-		instrument = selectedInstrument;
+	private void refreshInstrumentSelect() {
 		updateDifficultyButtons(nowSelected);
 	}
 
@@ -627,7 +598,7 @@ public class DynamicBeat extends JFrame {
 		rightButton.setVisible(visible);
 		easyButton.setVisible(visible);
 		hardButton.setVisible(visible);
-		instrumentChartInfoLabel.setVisible(visible && instrument == Instrument.BASS);
+		instrumentChartInfoLabel.setVisible(visible && instrumentPanel.getSelectedInstrument() == Instrument.BASS);
 	}
 
 }

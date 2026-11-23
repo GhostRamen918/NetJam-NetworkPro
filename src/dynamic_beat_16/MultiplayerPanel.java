@@ -20,9 +20,22 @@ final class MultiplayerPanel extends JPanel {
 		new Room("012", "예시용", 2, 6)
 	};
 
-	private record Room(String number, String name, int occupants, int capacity) {
+	private static final class Room {
+		private final String number;
+		private final String name;
+		private final int occupants;
+		private final int capacity;
+
+		Room(String number, String name, int occupants, int capacity) {
+			this.number = number;
+			this.name = name;
+			this.occupants = occupants;
+			this.capacity = capacity;
+		}
+
+		@Override
 		public String toString() {
-			return "방 " + number + "   ·   " + name + "   ·   " + occupants + " / " + capacity + "명";
+			return "방 " + number + "  " + name + "  " + occupants + " / " + capacity + "명";
 		}
 	}
 
@@ -69,12 +82,12 @@ final class MultiplayerPanel extends JPanel {
 		JButton createRoomButton = new JButton("방 만들기");
 		createRoomButton.addActionListener(e -> {
 			String name = roomNameTextField.getText().strip();
-			if (name.isEmpty() || name.codePointCount(0, name.length()) > 24) {
+			if (name.isEmpty() || name.length() > 24) {
 				errorLabel.setText("방 이름을 1~24자로 입력해 주세요.");
 				roomNameTextField.requestFocusInWindow();
 				return;
 			}
-			showLobby(new Room("—", name, 0, (Integer) capacitySpinner.getValue()));
+			showLobby(new Room(".", name, 0, (Integer) capacitySpinner.getValue()));
 		});
 		roomNameTextField.addActionListener(e -> createRoomButton.doClick());
 		JPanel actionPanel = new JPanel(new BorderLayout(12, 0));
@@ -118,8 +131,8 @@ final class MultiplayerPanel extends JPanel {
 	}
 
 	private void showLobby(Room selectedRoom) {
-		int capacity = selectedRoom.capacity();
-		int occupied = selectedRoom.occupants();
+		int capacity = selectedRoom.capacity;
+		int occupied = selectedRoom.occupants;
 		int participantsCount = occupied + 1;
 		lobbyPanel.removeAll();
 		JButton leaveButton = new JButton("나가기");
@@ -134,8 +147,8 @@ final class MultiplayerPanel extends JPanel {
 		topPanel.add(header("멀티플레이 / 대기실", roomActionPanel), BorderLayout.NORTH);
 		JPanel roomPanel = new JPanel();
 		roomPanel.setLayout(new BorderLayout(18, 0));
-		roomPanel.add(new JLabel("방 번호  " + selectedRoom.number()), BorderLayout.WEST);
-		roomPanel.add(new JLabel(selectedRoom.name()), BorderLayout.CENTER);
+		roomPanel.add(new JLabel("방 번호  " + selectedRoom.number), BorderLayout.WEST);
+		roomPanel.add(new JLabel(selectedRoom.name), BorderLayout.CENTER);
 		roomPanel.add(new JLabel("미리보기"), BorderLayout.EAST);
 		topPanel.add(roomPanel, BorderLayout.CENTER);
 		lobbyPanel.add(topPanel, BorderLayout.NORTH);
@@ -199,7 +212,6 @@ final class MultiplayerPanel extends JPanel {
 	private static JPanel formField(String name, JComponent inputComponent) {
 		JPanel fieldPanel = new JPanel(new BorderLayout(0, 6));
 		JLabel captionLabel = new JLabel(name);
-		captionLabel.setLabelFor(inputComponent);
 		fieldPanel.add(captionLabel, BorderLayout.NORTH);
 		fieldPanel.add(inputComponent, BorderLayout.CENTER);
 		return fieldPanel;

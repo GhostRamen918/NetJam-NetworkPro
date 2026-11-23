@@ -27,7 +27,7 @@ public class Note extends Thread {
 	}
 
 	public String getNoteType() {
-		return lane.noteName();
+		return lane.noteName;
 	}
 
 	public boolean isProceeded() {
@@ -43,8 +43,8 @@ public class Note extends Thread {
 	}
 
 	public void screenDraw(Graphics2D g) {
-		for (int tile = 0; tile < lane.widthInTiles(); tile++) {
-			g.drawImage(noteBasicImage, lane.x() + tile * Lane.TILE_WIDTH, y, null);
+		for (int tile = 0; tile < lane.widthInTiles; tile++) {
+			g.drawImage(noteBasicImage, lane.x + tile * Lane.TILE_WIDTH, y, null);
 		}
 	}
 

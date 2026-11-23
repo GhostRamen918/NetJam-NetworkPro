@@ -2,7 +2,6 @@ package dynamic_beat_16;
 
 import java.awt.event.KeyEvent;
 import java.util.List;
-import java.util.Map;
 
 public final class NoteCharts {
 
@@ -40,11 +39,11 @@ public final class NoteCharts {
 
 		Lane laneFor(String noteName) {
 			for (Lane lane : lanes) {
-				if (lane.noteName().equals(noteName)) {
+				if (lane.noteName.equals(noteName)) {
 					return lane;
 				}
 			}
-			throw new IllegalArgumentException("Unsupported note for " + this + ": " + noteName);
+			throw new IllegalArgumentException("Unsupported note");
 		}
 	}
 
@@ -58,35 +57,67 @@ public final class NoteCharts {
 		}
 	}
 
-	record Lane(String noteName, int keyCode, int x, int widthInTiles, String soundFile) {
+	static final class Lane {
 		static final int TILE_WIDTH = 100;
+
+		final String noteName;
+		final int keyCode;
+		final int x;
+		final int widthInTiles;
+		final String soundFile;
+
+		Lane(String noteName, int keyCode, int x, int widthInTiles, String soundFile) {
+			this.noteName = noteName;
+			this.keyCode = keyCode;
+			this.x = x;
+			this.widthInTiles = widthInTiles;
+			this.soundFile = soundFile;
+		}
 	}
 
-	private record ChartKey(String musicFile, String difficulty, Instrument instrument) {}
+	private static final class Chart {
+		private final String musicFile;
+		private final String difficulty;
+		private final Instrument instrument;
+		private final Beat[] beats;
 
-	// 같은 곡이라도 난이도와 악기 조합마다 별도의 악보를 등록할 수 있다.
-	private static final Map<ChartKey, Beat[]> CHARTS = Map.of(
-		new ChartKey("Bensound - Energy.mp3", "Easy", Instrument.DEFAULT), singleNote(),
-		new ChartKey("Bensound - Energy.mp3", "Hard", Instrument.DEFAULT), singleNote(),
-		new ChartKey("Bensound - Energy.mp3", "Easy", Instrument.BASS), energyBassEasy(),
-		new ChartKey("Joakim Karud - Wild Flower.mp3", "Easy", Instrument.DEFAULT), singleNote(),
-		new ChartKey("Joakim Karud - Wild Flower.mp3", "Hard", Instrument.DEFAULT), singleNote(),
-		new ChartKey("Joakim Karud - Mighty Love.mp3", "Easy", Instrument.DEFAULT), mightyLoveEasy(),
-		new ChartKey("Joakim Karud - Mighty Love.mp3", "Hard", Instrument.DEFAULT), singleNote()
-	);
+		Chart(String musicFile, String difficulty, Instrument instrument, Beat[] beats) {
+			this.musicFile = musicFile;
+			this.difficulty = difficulty;
+			this.instrument = instrument;
+			this.beats = beats;
+		}
+	}
+
+	// 같은 곡이라도 난이도와 악기 조합마다 별도의 악보를 등록할 수 있음
+	private static final Chart[] CHARTS = {
+		new Chart("Bensound - Energy.mp3", "Easy", Instrument.DEFAULT, singleNote()),
+		new Chart("Bensound - Energy.mp3", "Hard", Instrument.DEFAULT, singleNote()),
+		new Chart("Bensound - Energy.mp3", "Easy", Instrument.BASS, energyBassEasy()),
+		new Chart("Joakim Karud - Wild Flower.mp3", "Easy", Instrument.DEFAULT, singleNote()),
+		new Chart("Joakim Karud - Wild Flower.mp3", "Hard", Instrument.DEFAULT, singleNote()),
+		new Chart("Joakim Karud - Mighty Love.mp3", "Easy", Instrument.DEFAULT, mightyLoveEasy()),
+		new Chart("Joakim Karud - Mighty Love.mp3", "Hard", Instrument.DEFAULT, singleNote())
+	};
 
 	private NoteCharts() {}
 
 	public static boolean hasChart(String musicFile, String difficulty, Instrument instrument) {
-		return CHARTS.containsKey(new ChartKey(musicFile, difficulty, instrument));
+		return findChart(musicFile, difficulty, instrument) != null;
 	}
 
 	public static Beat[] getBeats(String musicFile, String difficulty, Instrument instrument) {
-		Beat[] chart = CHARTS.get(new ChartKey(musicFile, difficulty, instrument));
-		if (chart == null) {
-			throw new IllegalArgumentException("Missing chart for " + musicFile + " / " + difficulty + " / " + instrument);
+		return findChart(musicFile, difficulty, instrument).beats.clone();
+	}
+
+	private static Chart findChart(String musicFile, String difficulty, Instrument instrument) {
+		for (Chart chart : CHARTS) {
+			if (chart.musicFile.equals(musicFile) && chart.difficulty.equals(difficulty)
+					&& chart.instrument == instrument) {
+				return chart;
+			}
 		}
-		return chart.clone();
+		return null;
 	}
 
 	private static Beat[] singleNote() {
