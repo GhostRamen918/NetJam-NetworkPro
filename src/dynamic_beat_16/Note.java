@@ -160,5 +160,45 @@ public class Note extends Thread { // 각각의 note 또한 하나의 부분적�
 	public int getY() { //현재의 y좌표 반환
 		return y; 
 	}
+	
+	//<점수함수>
+	public int score() {
+		if(y>=613) { //Late
+			//System.out.println("Current score="+10);
+			close();
+			return 10;
+		}
+		else if(y>=600) { //Good
+			//System.out.println("Current score="+20);
+			close();
+			return 20;
+		}
+		else if(y>=587) { //Great
+			//System.out.println("Current score="+30);
+			close();
+			return 30;
+		}
+		else if(y>=573) { //Perfect
+			//System.out.println("Current score="+40);
+			close();
+			return 40;
+		}
+		else if(y>=565) { //Great
+			//System.out.println("Current score="+30);
+			close();
+			return 30;
+		}
+		else if(y>=550) { //Good
+			//System.out.println("Current score="+20);
+			close();
+			return 20;
+		}
+		else if(y>=535) { //Early
+			//System.out.println("Current score="+10);
+			close();
+			return 10;
+		}
+		return 0;
+	}
 
 }

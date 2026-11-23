@@ -1,5 +1,7 @@
 package dynamic_beat_16;
 
+//import dynamic_beat_16.DynamicBeat;
+
 public class Main {
 	public static final int SCREEN_WIDTH=1280;
 	public static final int SCREEN_HEIGHT=720;
