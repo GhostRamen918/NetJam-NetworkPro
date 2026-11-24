@@ -1,11 +1,20 @@
-# bin 파일
-/bin/
+# ===== 빌드 결과물 (실행할 때마다 IDE가 자동으로 만듦) =====
+# Eclipse
+bin/
+# IntelliJ
+out/
+*.class
 
+# ===== IntelliJ 프로젝트 설정 (각자 IDE에서 설정) =====
+.idea/
+*.iml
+
+# ===== Eclipse 프로젝트 설정 (각자 IDE에서 설정) =====
 .classpath
 .project
 .settings/
 
-# mac 자동 완성 파일
+# ===== 맥 자동 생성 파일 =====
 .DS_Store
 
 # Created by https://www.toptal.com/developers/gitignore/api/java
