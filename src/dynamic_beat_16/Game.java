@@ -44,7 +44,7 @@ public class Game extends Thread {
 	private int maxCombo=0;
 	
 	private final ArrayList<Note> noteList = new ArrayList<>();
-	private boolean allNotesSpawned;
+	private volatile boolean allNotesSpawned;
 
 	public boolean hasFinishedNotes() {
 		// 다른 스레드가 같이 쓰고 있어서 안전하게 쓰기 위해
@@ -76,11 +76,6 @@ public class Game extends Thread {
 	private void drawCentered(Graphics2D g, String text, int y) {
 		int x = (Main.SCREEN_WIDTH - g.getFontMetrics().stringWidth(text)) / 2;
 		g.drawString(text, x, y);
-	}
-	
-	// <생성자> - 초기화 
-	public Game(String titleName, String difficulty, String musicTitle) {
-		this(titleName, difficulty, musicTitle, Instrument.DEFAULT);
 	}
 
 	public Game(String titleName, String difficulty, String musicTitle, Instrument instrument) {

@@ -16,10 +16,6 @@ public class Note extends Thread {
 	private int y;
 	private boolean proceeded = true;
 
-	public Note(String noteType) {
-		this(noteType, Instrument.DEFAULT);
-	}
-
 	public Note(String noteType, Instrument instrument) {
 		this.lane = instrument.laneFor(noteType);
 		this.instrument = instrument;
