@@ -4,8 +4,6 @@ import java.util.List;
 
 /** ROOM_STATE: 내가 들어간 방의 전체 상태 (서버 → 그 방 사람 전체) */
 public class RoomStateMsg extends Msg {
-	private static final long serialVersionUID = 1L;
-
 	private int roomId;
 	private String title;
 	private String hostId;

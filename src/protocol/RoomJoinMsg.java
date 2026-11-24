@@ -4,8 +4,6 @@ package protocol;
  *  ROOM_EXIT
  **/
 public class RoomJoinMsg extends Msg {
-	private static final long serialVersionUID = 1L;
-
 	private String nickname;
 	private int roomId;
 

@@ -2,8 +2,6 @@ package protocol;
 
 /** 모든 *_FAIL, GAME_ABORT */
 public class ErrorMsg extends Msg {
-	private static final long serialVersionUID = 1L;
-
 	private String errorCode;
 	private String reason;
 
