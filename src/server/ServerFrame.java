@@ -18,7 +18,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
-// 서버 화면 (WindowBuilder로 열어서 수정 가능)
+// 서버 화면
 public class ServerFrame extends JFrame {
 
 	private JPanel contentPane;

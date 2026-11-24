@@ -16,25 +16,22 @@ import protocol.RoomStateMsg;
 
 // 게임 서버 (방 1개, 최대 4명)
 // 제어 소켓(6000), 인게임 소켓(6001) 두 개를 열고 접속한 클라이언트마다 스레드를 만든다.
-// 유저 정보는 여러 스레드가 같이 쓰기 때문에 synchronized 메서드에서만 바꾼다.
 public class GameServer {
 
-	public static final int CONTROL_PORT = 6000; // 명세서는 5000인데 맥은 AirPlay가 5000을 써서 6000으로 함
+	public static final int CONTROL_PORT = 6000;
 	public static final int GAME_PORT = 6001;
 	public static final int MAX_PLAYERS = 4;
 
-	private ServerFrame frame; // 서버 화면 (없으면 콘솔에 출력)
+	private ServerFrame frame; 
 	private ServerSocket controlServer;
 	private ServerSocket gameServer;
 	private boolean running = false;
 
-	// 대기실 상태
 	private Map<String, Player> players = new LinkedHashMap<>(); // 유저 ID → 유저 (들어온 순서대로)
-	private String hostId; // 방장
+	private String hostId; 
 	private String songId = "0";
 	private String difficulty = "EASY";
 
-	// 인게임 점수
 	private int combo = 0;
 	private int teamScore = 0;
 
@@ -42,8 +39,7 @@ public class GameServer {
 		this.frame = frame;
 	}
 
-	// ===== 서버 시작 / 중지 =====
-
+	// 서버 시작 / 중지 함수
 	public void start() throws IOException {
 		controlServer = new ServerSocket(CONTROL_PORT);
 		gameServer = new ServerSocket(GAME_PORT);

@@ -19,12 +19,12 @@ import protocol.RoomJoinMsg;
 import protocol.RoomStateMsg;
 import protocol.SelectInstMsg;
 
-// 서버 테스트용 콘솔 클라이언트 (실제 게임 클라이언트 아님)
+// 서버 테스트용 콘솔 클라이언트 
 // 실행하면 ID 입력 → 자동으로 입장
 // 명령: inst DRUM / ready / judge PERFECT 300 / exit
 public class TestClient {
 
-	static String host = "localhost"; // 다른 컴퓨터 서버면 IP로 바꾸기
+	static String host = "localhost"; 
 	static String userId;
 	static ObjectOutputStream out;
 	static BufferedWriter gameOut;
