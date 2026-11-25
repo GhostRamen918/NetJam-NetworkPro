@@ -15,6 +15,8 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerNumberModel;
 
+import server.Player;
+
 final class MultiplayerPanel extends JPanel {
 	private Room[] previewRooms = {
 		new Room("012", "예시용", 2, 6)
@@ -25,6 +27,7 @@ final class MultiplayerPanel extends JPanel {
 		private final String name;
 		private final int occupants;
 		private final int capacity;
+		private Player host;
 
 		Room(String number, String name, int occupants, int capacity) {
 			this.number = number;
@@ -41,6 +44,8 @@ final class MultiplayerPanel extends JPanel {
 
 	private final CardLayout cards = new CardLayout();
 	private final JTextField roomNameTextField = new JTextField(25);
+	private final JTextField playerNameTextField = new JTextField(25);
+	private final JTextField playerIdTextField = new JTextField(25);
 	private final JSpinner capacitySpinner = new JSpinner(new SpinnerNumberModel(6, 2, 6, 1));
 	private final JLabel errorLabel = new JLabel(" ");
 	private final JPanel lobbyPanel = new JPanel(new BorderLayout(0, 16));
@@ -75,6 +80,8 @@ final class MultiplayerPanel extends JPanel {
 		JPanel roomMakePanel = new JPanel(new GridLayout(2, 1, 0, 14));
 		// 인원수는 스피너의 화살표로 선택한다.
 		((JSpinner.DefaultEditor) capacitySpinner.getEditor()).getTextField().setEditable(false);
+		roomMakePanel.add(formFieldPanel("닉네임", playerNameTextField));
+		roomMakePanel.add(formFieldPanel("ID", playerIdTextField));
 		roomMakePanel.add(formFieldPanel("방 이름", roomNameTextField));
 		roomMakePanel.add(formFieldPanel("최대 인원", capacitySpinner));
 		formPanel.add(roomMakePanel, BorderLayout.CENTER);
@@ -122,7 +129,6 @@ final class MultiplayerPanel extends JPanel {
 			}
 		});
 		JPanel roomPanel = new JPanel(new BorderLayout(12, 0));
-		roomPanel.add(new JLabel("예시 방 목록"), BorderLayout.WEST);
 		roomPanel.add(joinButton, BorderLayout.EAST);
 		roomListPanel.add(roomPanel, BorderLayout.SOUTH);
 		return roomListPanel;
