@@ -220,8 +220,4 @@ public class GameServer {
 		frame.showPlayers(rows);
 	}
 
-	// 화면 없이 서버만 켜서 테스트할 때
-	public static void main(String[] args) throws IOException {
-		new GameServer(null).start();
-	}
 }

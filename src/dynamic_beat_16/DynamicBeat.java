@@ -67,7 +67,7 @@ public class DynamicBeat extends JFrame {
 	private int mouseX, mouseY;
 
 	private GameState state = GameState.INTRO;
-	private static final int RESULT_FADE_MILLIS = 1500;
+	private static final int RESULT_FADE_MILLIS = 800;
 	private Game completedGame;
 	private int fadeElapsedMillis;
 	private int fadeOpacity;
