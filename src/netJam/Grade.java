@@ -1,4 +1,4 @@
-package dynamic_beat_16;
+package netJam;
 
 public final class Grade {
 	public final int total;

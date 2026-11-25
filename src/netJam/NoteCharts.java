@@ -1,4 +1,4 @@
-package dynamic_beat_16;
+package netJam;
 
 import java.awt.event.KeyEvent;
 import java.util.List;

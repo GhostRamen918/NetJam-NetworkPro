@@ -1,4 +1,4 @@
-package dynamic_beat_16;
+package netJam;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -11,7 +11,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import dynamic_beat_16.NoteCharts.Instrument;
+import netJam.NoteCharts.Instrument;
 
 final class InstSelectPanel extends JPanel {
 	private static final Instrument[] INSTRUMENTS = { Instrument.DEFAULT, Instrument.BASS };
